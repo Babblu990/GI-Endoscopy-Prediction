@@ -3,68 +3,42 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * FIREBASE SECURITY RULES DOCUMENTATION
-     *
-     * Core Philosophy:
-     * This ruleset implements a strict User-Ownership model designed for medical data privacy.
-     * Access is governed by the hierarchical path, ensuring that users can only interact with data 
-     * nested under their specific UID.
+     * FIREBASE SECURITY RULES
+     * Implements a strict User-Ownership model for medical data privacy.
      */
 
-    // --- Helper Functions ---
-
-    /** @description Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** @description Checks if the authenticated user matches the provided userId. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** @description Verifies document existence and ownership for state-changing operations. */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
 
-    // --- Collection Rules ---
-
-    /**
-     * @description Rules for diagnostic predictions.
-     * @path /users/{userId}/predictions/{predictionId}
-     */
-    match /users/{userId}/predictions/{predictionId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == userId;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Legacy rules for endoscopic images (kept for backward compatibility).
-     */
-    match /users/{userId}/endoscopicImages/{imageId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.uploadedByUserId == userId;
-      allow update, delete: if isExistingOwner(userId);
-
-      match /predictionResults/{predictionResultId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.uploadedByUserId == userId;
-        allow update, delete: if isExistingOwner(userId);
+    // Rules for user profiles
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+      
+      // Rules for diagnostic predictions
+      match /predictions/{predictionId} {
+        allow read, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId);
       }
     }
 
-    /**
-     * @description Rules for global AI model metadata.
-     */
+    // Rules for global AI model metadata
     match /aiModels/{modelId} {
       allow get, list: if isSignedIn();
       allow create, update, delete: if false;
     }
 
-    // --- Default Deny ---
+    // Default Deny
     match /{path=**} {
       allow read, write: if false;
     }
