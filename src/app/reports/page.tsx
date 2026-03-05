@@ -48,6 +48,34 @@ export default function ReportsPage() {
 
   const { data: reports, isLoading } = useCollection(predictionsQuery)
 
+  const handleExportCSV = () => {
+    if (!reports || reports.length === 0) return
+
+    const headers = ["Scan ID", "Diagnosis", "Confidence", "Date", "Time", "Original File"]
+    const csvRows = reports.map(r => {
+      const date = new Date(r.uploadedAt)
+      return [
+        r.id,
+        r.overallPrediction,
+        `${r.overallConfidence}%`,
+        format(date, 'yyyy-MM-dd'),
+        format(date, 'HH:mm:ss'),
+        r.originalFileName
+      ].join(",")
+    })
+
+    const csvContent = [headers.join(","), ...csvRows].join("\n")
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.setAttribute("href", url)
+    link.setAttribute("download", `GI_Detect_History_${format(new Date(), 'yyyyMMdd')}.csv`)
+    link.style.visibility = 'hidden'
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -61,8 +89,13 @@ export default function ReportsPage() {
                 <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">Comprehensive archive of all patient scans and AI analyses.</p>
               </div>
               <div className="flex items-center gap-2 w-full md:w-auto">
-                <Button variant="outline" className="flex-1 md:flex-none gap-2 border-white/5 bg-secondary/30 text-xs h-10">
-                  <Download className="w-4 h-4" /> Export
+                <Button 
+                  variant="outline" 
+                  onClick={handleExportCSV}
+                  disabled={!reports || reports.length === 0}
+                  className="flex-1 md:flex-none gap-2 border-white/5 bg-secondary/30 text-xs h-10"
+                >
+                  <Download className="w-4 h-4" /> Export CSV
                 </Button>
                 <Button className="flex-1 md:flex-none bg-primary text-background font-bold gap-2 cyan-glow h-10" asChild>
                   <Link href="/upload"><FileText className="w-4 h-4" /> New Report</Link>

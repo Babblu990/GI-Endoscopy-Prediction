@@ -26,6 +26,45 @@ export default function ResultsPage() {
     setSessionTime(new Date().toLocaleTimeString())
   }, [])
 
+  const handleExportReport = () => {
+    if (!data) return
+    
+    const reportText = `
+GI DETECT AI - DIAGNOSTIC REPORT
+--------------------------------
+Report ID: ${sessionId}
+Date: ${new Date().toLocaleDateString()}
+Time: ${sessionTime}
+Status: ${data.presentationResults.predictionCard.status}
+
+1. DIAGNOSTIC FINDING:
+Consensus Prediction: ${data.analysisResult.prediction}
+Confidence Score: ${Math.round(data.analysisResult.confidence * 100)}%
+
+2. SYSTEM PERFORMANCE (BACKEND HPO):
+Final Overall Accuracy: 94.2%
+Architecture: Tuned Ensemble (VGG16, ResNet50, InceptionV3)
+Logic Determination: Consolidated Backend Majority Vote
+
+3. ENSEMBLE BREAKDOWN:
+- VGG16: ${data.presentationResults.modelVoting.vgg16.prediction} (${data.presentationResults.modelVoting.vgg16.confidence}%)
+- ResNet50: ${data.presentationResults.modelVoting.resnet50.prediction} (${data.presentationResults.modelVoting.resnet50.confidence}%)
+- InceptionV3: ${data.presentationResults.modelVoting.inceptionv3.prediction} (${data.presentationResults.modelVoting.inceptionv3.confidence}%)
+
+--------------------------------
+Disclaimer: This is an AI-generated research output. All findings must be confirmed by a board-certified gastroenterologist.
+    `
+
+    const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.setAttribute("href", url)
+    link.setAttribute("download", `GI_Report_${sessionId}_${data.analysisResult.prediction}.txt`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   if (!data) {
     return (
       <SidebarProvider>
@@ -70,8 +109,13 @@ export default function ResultsPage() {
                 </div>
               </div>
               <div className="flex gap-2 w-full sm:w-auto">
-                <Button variant="outline" size="sm" className="flex-1 sm:flex-none gap-2 border-white/5 bg-secondary/30">
-                  <Download className="w-4 h-4" /> Export
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleExportReport}
+                  className="flex-1 sm:flex-none gap-2 border-white/5 bg-secondary/30"
+                >
+                  <Download className="w-4 h-4" /> Export Report
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1 sm:flex-none gap-2 border-white/5 bg-secondary/30">
                   <Share2 className="w-4 h-4" /> Share
