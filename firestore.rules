@@ -1,59 +1,48 @@
-/**
- * GI Endoscopic Disease Detection System - Security Rules
- *
- * Core Philosophy:
- * This ruleset enforces a strict user-ownership model where all data is private by default. 
- * Authorization is primarily path-based, leveraging the hierarchical structure of Firestore 
- * to ensure that users can only access their own profiles and prediction history.
- *
- * Data Structure:
- * All application data is organized under the top-level `/users/{userId}` path. 
- * - `/users/{userId}`: Contains the user's profile information.
- * - `/users/{userId}/predictions/{predictionId}`: Contains AI diagnostic results for images uploaded by the user.
- *
- * Key Security Decisions:
- * 1. Strict Ownership: Access to any document requires the authenticated user's UID to match 
- *    the `{userId}` wildcard in the document path.
- * 2. No Public Access: There are no public read or write permissions; all operations 
- *    require a valid Firebase Authentication session.
- * 3. Prototyping Flexibility: While authorization is strictly enforced (who can access what), 
- *    the specific fields within the data (except for relational IDs) are not validated 
- *    to allow for rapid iteration on the AI model outputs.
- *
- * Denormalization for Authorization:
- * Each `Prediction` document includes a denormalized `userId` field. This ensures that 
- * authorization logic can be validated against both the path and the document content 
- * without requiring cross-collection lookups, maximizing performance and security integrity.
- *
- * Structural Segregation:
- * User profiles and their diagnostic history are segregated into distinct subcollections. 
- * This prevents accidental data exposure and simplifies query-based authorization for 
- * historical report listing.
- */
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    /**
+     * FIREBASE SECURITY RULES DOCUMENTATION
+     *
+     * Core Philosophy:
+     * This ruleset implements a strict User-Ownership model designed for medical data privacy and 
+     * high-performance authorization. Access is primarily governed by the hierarchical path, 
+     * ensuring that users can only interact with data nested under their specific UID.
+     *
+     * Data Structure:
+     * 1. Private User Data: /users/{userId}/... (Endoscopic images and their related AI predictions).
+     * 2. Global Reference Data: /aiModels/{modelId} (Read-only metadata for deep learning models).
+     *
+     * Key Security Decisions:
+     * - Authorization Independence: We use denormalized ownership fields (uploadedByUserId) within 
+     *   documents to match the path wildcards. This allows for atomic permission checks without 
+     *   expensive get() calls to parent documents.
+     * - Prototyping Flexibility: While authorization is strictly enforced based on UIDs, the 
+     *   internal schema of the data (types, optional fields) is not validated to allow for 
+     *   rapid development iterations.
+     * - Destructive Operation Safety: All updates and deletes require explicit verification 
+     *   that the document exists and is owned by the requester.
+     *
+     * Denormalization for Authorization:
+     * To maintain "Query-Accurate Permissions," the `uploadedByUserId` is required on every 
+     * user-owned document. This ensures that even in Collection Group queries (if enabled), 
+     * the rules can efficiently filter and protect data.
+     */
+
     // --- Helper Functions ---
 
-    /**
-     * @description Checks if the request is made by an authenticated user.
-     */
+    /** @description Checks if the request is from an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the authenticated user's UID matches the provided userId.
-     */
+    /** @description Checks if the authenticated user matches the provided userId. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /**
-     * @description Checks if the user is the owner and the document exists (for update/delete).
-     */
+    /** @description Verifies document existence and ownership for state-changing operations. */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
@@ -61,39 +50,47 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     /**
-     * @description Rules for the user profile document.
-     * @path /users/{userId}
-     * @allow (create) User 'abc' creates document /users/abc.
-     * @deny (create) User 'abc' attempts to create /users/xyz.
-     * @principle Pattern 4: Self-Creation. Enforces that users can only manage their own root profile.
+     * @description Rules for endoscopic images uploaded by medical users.
+     * @path /users/{userId}/endoscopicImages/{imageId}
+     * @allow (create) if authenticated as {userId} and uploadedByUserId in data matches {userId}.
+     * @deny (list) if the authenticated UID does not match the {userId} in the path.
+     * @principle Enforces path-based ownership and relational integrity for uploaded content.
      */
-    match /users/{userId} {
+    match /users/{userId}/endoscopicImages/{imageId} {
       allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update, delete: if isExistingOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.uploadedByUserId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.uploadedByUserId == resource.data.uploadedByUserId;
+      allow delete: if isExistingOwner(userId);
 
       /**
-       * @description Rules for individual AI prediction records.
-       * @path /users/{userId}/predictions/{predictionId}
-       * @allow (create) User 'abc' uploads a prediction to their own subcollection with userId 'abc' in data.
-       * @deny (list) User 'abc' attempts to list predictions under /users/xyz/predictions.
-       * @principle Pattern 1: Ownership. Validates relational integrity by ensuring the userId in the document matches the path.
+       * @description Rules for AI diagnostic results associated with a specific image.
+       * @path /users/{userId}/endoscopicImages/{imageId}/predictionResults/{predictionResultId}
+       * @allow (get) if authenticated as the {userId} who owns the parent image.
+       * @deny (update) if attempting to change the uploadedByUserId field.
+       * @principle Hierarchical ownership with immutable relational links.
        */
-      match /predictions/{predictionId} {
+      match /predictionResults/{predictionResultId} {
         allow get, list: if isOwner(userId);
-        
-        // On create: Ensure the user owns the path AND the data matches the owner
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        
-        // On update: Ensure the user owns the document and the userId field remains immutable
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        
-        // On delete: Ensure the user owns the document and it actually exists
+        allow create: if isOwner(userId) && request.resource.data.uploadedByUserId == userId;
+        allow update: if isExistingOwner(userId) && request.resource.data.uploadedByUserId == resource.data.uploadedByUserId;
         allow delete: if isExistingOwner(userId);
       }
     }
 
-    // Default deny for any unmatched paths
+    /**
+     * @description Rules for global AI model metadata and performance metrics.
+     * @path /aiModels/{modelId}
+     * @allow (list) for any authenticated user to view available models.
+     * @deny (create) for standard users; global models are managed by system administrators.
+     * @principle Public read access for authenticated users with restricted write access.
+     */
+    match /aiModels/{modelId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if false; // System models are managed via Admin SDK/Console only.
+    }
+
+    // --- Default Deny ---
+    // Explicitly deny access to any other paths or unhandled operations.
     match /{path=**} {
       allow read, write: if false;
     }
