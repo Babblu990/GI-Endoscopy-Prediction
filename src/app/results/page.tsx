@@ -7,7 +7,7 @@ import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { HumanBodyVisualizer } from "@/components/dashboard/human-body-visualizer"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Download, Share2, CheckCircle2, AlertTriangle, Zap, TrendingUp, Info, BarChart3 } from "lucide-react"
+import { ArrowLeft, Download, Share2, CheckCircle2, AlertTriangle, Zap, BarChart3, Info } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
@@ -99,7 +99,7 @@ export default function ResultsPage() {
                     
                     <div className="space-y-2">
                       <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                        <span>Consolidated Confidence</span>
+                        <span>Confidence Score</span>
                         <span className="text-white">{Math.round(analysisResult.confidence * 100)}%</span>
                       </div>
                       <Progress value={analysisResult.confidence * 100} className={`h-2 ${isHealthy ? '[&>div]:bg-accent' : '[&>div]:bg-destructive'}`} />
@@ -125,66 +125,49 @@ export default function ResultsPage() {
                   <CardHeader className="pb-4">
                     <div className="flex items-center gap-2">
                        <BarChart3 className="w-5 h-5 text-primary" />
-                       <CardTitle className="text-lg font-black uppercase tracking-tight">Performance Benchmarks</CardTitle>
+                       <CardTitle className="text-lg font-black uppercase tracking-tight">System Performance</CardTitle>
                     </div>
-                    <CardDescription className="text-xs">Consolidated accuracy results calculated by the backend HPO ensemble.</CardDescription>
+                    <CardDescription className="text-xs">Final accuracy calculated by the backend HPO ensemble logic.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-8">
-                    {/* Accuracy Stats Section */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <div className="bg-secondary/30 rounded-2xl p-4 border border-white/5">
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Before Tuning</p>
-                        <div className="text-2xl font-black text-white/60">82.4%</div>
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">Base Architecture</p>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-accent/20 rounded-2xl p-6 border border-accent/40 cyan-glow flex flex-col items-center justify-center text-center">
+                        <p className="text-[10px] font-black text-accent uppercase tracking-widest mb-1">Overall System Accuracy</p>
+                        <div className="text-4xl font-black text-white">94.2%</div>
+                        <p className="text-[11px] text-accent/80 mt-2 font-bold uppercase tracking-wider">Backend Tuning Active</p>
                       </div>
-                      <div className="bg-primary/10 rounded-2xl p-4 border border-primary/20">
-                        <p className="text-[9px] font-black text-primary uppercase tracking-widest mb-1">After Tuning</p>
-                        <div className="text-2xl font-black text-white">94.2%</div>
-                        <div className="flex items-center gap-1 text-[9px] font-bold text-accent mt-1">
-                          <TrendingUp className="w-3 h-3" /> +11.8% HPO Impact
+                      
+                      <div className="bg-secondary/40 border border-white/10 rounded-2xl p-6 flex flex-col justify-center">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className="bg-primary/20 p-2 rounded-lg">
+                            <Zap className="w-5 h-5 text-primary" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">Decision Model</p>
+                            <h3 className="text-sm font-black text-white truncate">HPO Tuned Ensemble</h3>
+                          </div>
                         </div>
-                      </div>
-                      <div className="bg-accent/20 rounded-2xl p-4 border border-accent/40 cyan-glow">
-                        <p className="text-[9px] font-black text-accent uppercase tracking-widest mb-1">Overall Accuracy</p>
-                        <div className="text-2xl font-black text-white">94.2%</div>
-                        <p className="text-[10px] text-accent/80 mt-1">Final Backend Accuracy</p>
-                      </div>
-                    </div>
-
-                    {/* Voting Result Card */}
-                    <div className="bg-secondary/40 border border-white/10 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
-                      <div className="flex items-center gap-4 w-full sm:w-auto">
-                        <div className="bg-primary/20 p-3 rounded-xl">
-                          <Zap className="w-6 h-6 text-primary" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">Ensemble Decision</p>
-                          <h3 className="text-xl font-black text-white truncate">{presentationResults.modelVoting.majorityVoteResult}</h3>
-                        </div>
-                      </div>
-                      <div className="w-full sm:w-auto sm:text-right pt-4 sm:pt-0 border-t sm:border-t-0 border-white/10">
-                        <p className="text-[9px] text-muted-foreground uppercase font-black">Backend Precision</p>
-                        <p className="text-xl font-black text-accent">94.2%</p>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">
+                          Consolidated majority vote logic processed in the backend. Architecture includes VGG16, ResNet50, and InceptionV3.
+                        </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Lower Layout Grid - Anatomical focus */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   <Card className="glass-card flex flex-col items-center justify-center p-6 min-h-[350px] md:col-span-2">
-                      <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-6">Anatomical Localization</h3>
-                      <div className="flex-1 w-full max-w-[280px]">
-                        <HumanBodyVisualizer 
-                          isDetected={!isHealthy} 
-                          prediction={analysisResult.prediction}
-                        />
-                      </div>
-                      <div className="mt-4 text-[10px] text-muted-foreground text-center uppercase font-bold tracking-widest">
-                        Condition: {analysisResult.prediction} • Location Mapped by Backend AI
-                      </div>
-                   </Card>
-                </div>
+                {/* Anatomical focus */}
+                <Card className="glass-card flex flex-col items-center justify-center p-6 min-h-[400px]">
+                   <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-6">Anatomical Localization</h3>
+                   <div className="flex-1 w-full max-w-[320px]">
+                     <HumanBodyVisualizer 
+                       isDetected={!isHealthy} 
+                       prediction={analysisResult.prediction}
+                     />
+                   </div>
+                   <div className="mt-6 p-3 rounded-lg bg-secondary/30 border border-white/5 text-[10px] text-muted-foreground text-center uppercase font-bold tracking-widest w-full max-w-sm">
+                     Condition: {analysisResult.prediction} • Location Mapped by Backend AI
+                   </div>
+                </Card>
               </div>
             </div>
           </div>
