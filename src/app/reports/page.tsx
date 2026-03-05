@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
@@ -14,6 +15,25 @@ import Link from "next/link"
 import { useFirebase, useMemoFirebase, useCollection } from "@/firebase"
 import { collection, query, orderBy } from "firebase/firestore"
 import { format } from "date-fns"
+
+function FormattedDate({ dateString }: { dateString: string }) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  if (!mounted) return <div className="h-8 w-24 bg-white/5 animate-pulse rounded" />
+
+  try {
+    const date = new Date(dateString)
+    return (
+      <div className="text-xs">
+        <p className="text-white">{format(date, 'MMM dd, yyyy')}</p>
+        <p className="text-muted-foreground">{format(date, 'HH:mm')}</p>
+      </div>
+    )
+  } catch (e) {
+    return <span className="text-xs text-muted-foreground">Invalid date</span>
+  }
+}
 
 export default function ReportsPage() {
   const { user, firestore } = useFirebase()
@@ -100,7 +120,7 @@ export default function ReportsPage() {
                           <TableCell className="font-mono text-xs font-bold text-primary truncate max-w-[120px]">{report.id}</TableCell>
                           <TableCell>
                             <Badge 
-                              variant={report.overallPrediction.toLowerCase() === "healthy" ? "secondary" : "destructive"}
+                              variant={report.overallPrediction.toLowerCase() === "healthy" || report.overallPrediction.toLowerCase() === "normal" ? "secondary" : "destructive"}
                               className="text-[10px] px-2 py-0"
                             >
                               {report.overallPrediction}
@@ -115,10 +135,7 @@ export default function ReportsPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="text-xs">
-                              <p className="text-white">{format(new Date(report.uploadedAt), 'MMM dd, yyyy')}</p>
-                              <p className="text-muted-foreground">{format(new Date(report.uploadedAt), 'HH:mm')}</p>
-                            </div>
+                            <FormattedDate dateString={report.uploadedAt} />
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-1">

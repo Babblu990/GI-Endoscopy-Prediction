@@ -24,6 +24,7 @@ export function Header() {
           <Input 
             placeholder="Search patient records, reports..." 
             className="pl-10 bg-secondary/50 border-none focus-visible:ring-primary/50 text-sm h-9"
+            suppressHydrationWarning
           />
         </div>
       </div>
