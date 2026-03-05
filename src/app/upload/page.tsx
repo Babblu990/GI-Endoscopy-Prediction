@@ -141,6 +141,7 @@ export default function UploadPage() {
     }
   }
 
+  // Detect if auth is blocked by project configuration
   const isAuthBlocked = userError?.message?.includes('blocked') || userError?.message?.includes('identity-toolkit');
 
   return (
