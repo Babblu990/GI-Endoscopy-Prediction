@@ -167,7 +167,11 @@ export default function ResultsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                    <Card className="glass-card flex flex-col items-center justify-center p-6 h-[400px]">
                       <h3 className="text-sm font-bold text-muted-foreground mb-4 w-full">Anatomical Context</h3>
-                      <HumanBodyVisualizer isDetected={!isHealthy} className="flex-1" />
+                      <HumanBodyVisualizer 
+                        isDetected={!isHealthy} 
+                        prediction={analysisResult.prediction}
+                        className="flex-1" 
+                      />
                    </Card>
 
                    <Card className="glass-card">
