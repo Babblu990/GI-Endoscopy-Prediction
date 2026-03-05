@@ -38,8 +38,12 @@ export default function UploadPage() {
 
   // Ensure user is signed in anonymously on mount
   useEffect(() => {
-    if (!isUserLoading && !user) {
-      initiateAnonymousSignIn(auth)
+    if (!isUserLoading && !user && auth) {
+      try {
+        initiateAnonymousSignIn(auth)
+      } catch (e) {
+        console.error("Auth initialization failed. Ensure Identity Toolkit API is enabled.", e)
+      }
     }
   }, [user, isUserLoading, auth])
 
@@ -69,10 +73,11 @@ export default function UploadPage() {
     // Safety check for user auth
     if (!user) {
       toast({
-        title: "Session Initializing",
-        description: "Your secure diagnostic session is still setting up. Please try again in a moment.",
+        title: "Authentication Required",
+        description: "Please ensure Authentication is enabled in your Firebase Console.",
+        variant: "destructive"
       })
-      initiateAnonymousSignIn(auth)
+      if (auth) initiateAnonymousSignIn(auth)
       return
     }
 
@@ -82,7 +87,7 @@ export default function UploadPage() {
       
       if (result.error) {
         if (result.isQuotaExceeded) {
-          setCooldown(60) // Start a 60-second cooldown
+          setCooldown(60)
           toast({
             title: "System Rate Limit",
             description: "The AI service is processing many requests. Please wait 60 seconds.",
@@ -99,7 +104,6 @@ export default function UploadPage() {
         return
       }
 
-      // Process and Save Results
       const finalPrediction = result.prediction || 'Inconclusive'
       const finalConfidence = Math.round((result.confidence || 0) * 100)
 
@@ -125,18 +129,9 @@ export default function UploadPage() {
 
       setDocumentNonBlocking(newDocRef, predictionData, { merge: true })
 
-      // Prepare UI state for the Results page
-      const presentationResults = {
-        predictionCard: {
-          prediction: finalPrediction,
-          confidence: finalConfidence,
-          status: result.status || 'Completed'
-        }
-      }
-
       localStorage.setItem('lastResult', JSON.stringify({ 
         analysisResult: { prediction: finalPrediction, confidence: result.confidence || 0 }, 
-        presentationResults, 
+        presentationResults: { predictionCard: { prediction: finalPrediction, confidence: finalConfidence, status: result.status || 'Completed' } }, 
         preview 
       }))
       
@@ -146,7 +141,7 @@ export default function UploadPage() {
       console.error('Diagnostic Engine Error:', error)
       toast({
         title: "Inference Error",
-        description: "Could not communicate with the cloud diagnostic engine.",
+        description: "Could not communicate with the diagnostic engine. Check your API key and quota.",
         variant: "destructive"
       })
     } finally {
@@ -215,8 +210,8 @@ export default function UploadPage() {
                 </CardContent>
                 <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-white/5 mt-4">
                   <div className="flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground font-bold uppercase">
-                    <ShieldCheck className="w-4 h-4 text-accent" />
-                    {isUserLoading ? "Initializing session..." : !user ? "Connecting..." : "Secure Session Active"}
+                    <ShieldCheck className={`w-4 h-4 ${user ? 'text-accent' : 'text-destructive'}`} />
+                    {isUserLoading ? "Initializing session..." : !user ? "Auth API Disabled" : "Secure Session Active"}
                   </div>
                   <Button 
                     disabled={isButtonDisabled} 
@@ -233,11 +228,13 @@ export default function UploadPage() {
                         <Clock className="w-4 h-4" />
                         Retry in {cooldown}s
                       </>
-                    ) : isUserLoading || !user ? (
+                    ) : isUserLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Initializing...
                       </>
+                    ) : !user ? (
+                      "Enable Auth to Start"
                     ) : (
                       <>
                         <Zap className="w-4 h-4" />
@@ -249,13 +246,13 @@ export default function UploadPage() {
               </Card>
 
               <div className="lg:col-span-5 space-y-6">
-                {cooldown > 0 && (
-                  <div className="p-5 rounded-2xl bg-destructive/15 border border-destructive/30 flex gap-4 animate-pulse">
+                {!user && !isUserLoading && (
+                  <div className="p-5 rounded-2xl bg-destructive/15 border border-destructive/30 flex gap-4">
                     <AlertCircle className="w-6 h-6 text-destructive shrink-0" />
                     <div>
-                      <h4 className="font-black text-destructive text-xs uppercase tracking-widest">Rate Limit Hit</h4>
-                      <p className="text-[10px] text-destructive/80 mt-1 leading-relaxed">
-                        The AI service is processing many requests. System will unlock in <strong>{cooldown} seconds</strong>.
+                      <h4 className="font-black text-destructive text-xs uppercase tracking-widest leading-none">Configuration Required</h4>
+                      <p className="text-[10px] text-destructive/80 mt-1.5 leading-relaxed font-medium">
+                        Firebase Authentication is not yet enabled. Please visit your Firebase Console to enable <strong>Anonymous</strong> sign-in and activate the <strong>Identity Toolkit API</strong>.
                       </p>
                     </div>
                   </div>
@@ -283,7 +280,7 @@ export default function UploadPage() {
                    <Zap className="w-6 h-6 text-accent shrink-0" />
                    <div>
                      <h4 className="font-black text-accent text-xs uppercase tracking-widest">System Performance</h4>
-                     <p className="text-[10px] text-accent/80 mt-1 leading-relaxed">
+                     <p className="text-[10px] text-accent/80 mt-1 leading-relaxed font-medium">
                        Overall System Accuracy: <strong>94.2%</strong>.
                      </p>
                    </div>
