@@ -13,83 +13,127 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
   const normalizedPrediction = prediction?.toLowerCase() || '';
   
   // Mapping conditions to anatomical regions
-  const isUpperGI = normalizedPrediction.includes('esophagitis') || 
-                    normalizedPrediction.includes('infection');
+  const isEsophagus = normalizedPrediction.includes('esophagitis') || 
+                      normalizedPrediction.includes('infection');
                     
+  const isStomach = normalizedPrediction.includes('ulcer');
+
   const isLowerGI = normalizedPrediction.includes('polyp') || 
-                    normalizedPrediction.includes('ulcer') || 
                     normalizedPrediction.includes('tumor');
 
   return (
-    <div className={cn("relative w-full h-full flex items-center justify-center p-8", className)}>
+    <div className={cn("relative w-full h-full flex items-center justify-center p-4", className)}>
       <svg
-        viewBox="0 0 200 500"
-        className="w-full h-full max-h-[500px] drop-shadow-2xl"
+        viewBox="0 0 240 600"
+        className="w-full h-full max-h-[550px] drop-shadow-[0_0_30px_rgba(0,0,0,0.5)]"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Simplified Human Silhouette */}
+        <defs>
+          <radialGradient id="organGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity="0" />
+          </radialGradient>
+          <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="currentColor" stopOpacity="0.05" />
+            <stop offset="50%" stopColor="currentColor" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" />
+          </linearGradient>
+        </defs>
+
+        {/* Realistic Human Silhouette */}
         <path
-          d="M100 20C85 20 75 35 75 50C75 65 85 80 100 80C115 80 125 65 125 50C125 35 115 20 100 20Z"
+          d="M120 20C100 20 85 35 85 55C85 75 100 90 120 90C140 90 155 75 155 55C155 35 140 20 120 20Z"
           className="fill-muted-foreground/20"
         />
         <path
-          d="M75 85L50 120L40 220L50 240L60 200L70 150L70 450L95 450L95 280L105 280L105 450L130 450L130 150L140 200L150 240L160 220L150 120L125 85H75Z"
-          className="fill-muted-foreground/10 stroke-muted-foreground/20"
-          strokeWidth="2"
+          d="M85 95C70 100 55 110 45 130C35 150 30 200 35 250C40 300 55 320 65 310C75 300 80 250 80 200L80 560C80 580 95 580 105 580L115 400L125 400L135 580C145 580 160 580 160 560L160 200C160 250 165 300 175 310C185 320 200 300 205 250C210 200 205 150 195 130C185 110 170 100 155 95H85Z"
+          fill="url(#bodyGradient)"
+          className="text-muted-foreground stroke-muted-foreground/20"
+          strokeWidth="1.5"
         />
 
-        {/* GI Tract Highlight Regions */}
-        <g>
-          {/* Esophagus/Upper GI area - Active on Esophagitis or Infection */}
+        {/* GI Tract Details */}
+        <g className="transition-all duration-700">
+          
+          {/* Esophagus (Upper GI) */}
           <path
-            d="M95 120C95 120 85 140 85 160C85 180 100 190 115 180C130 170 120 140 120 140"
+            d="M116 95L116 210C116 210 118 220 125 220C132 220 134 210 134 210L134 95"
             className={cn(
-              "stroke-primary/20 transition-all duration-700", 
-              isDetected && isUpperGI ? "stroke-accent fill-accent/20 opacity-100" : "opacity-40"
+              "stroke-white/5 fill-transparent transition-all duration-500",
+              isDetected && isEsophagus ? "stroke-accent fill-accent/20 stroke-[6px]" : "stroke-[4px]"
             )}
-            strokeWidth="8"
             strokeLinecap="round"
           />
-          
-          {/* Intestinal/Lower GI area - Active on Polyp/Ulcer/Tumor */}
-          <path
-            d="M85 190C85 190 70 210 85 230C100 250 120 230 135 250C150 270 130 290 130 290"
-            className={cn(
-              "stroke-primary/20 transition-all duration-700", 
-              isDetected && isLowerGI ? "stroke-accent fill-accent/20 opacity-100" : "opacity-40"
-            )}
-            strokeWidth="8"
-            strokeLinecap="round"
-          />
-          
-          {/* Default highlight if detected but not mapped specifically */}
-          {isDetected && !isUpperGI && !isLowerGI && (
-            <path
-              d="M100 180 Q 100 240 100 300"
-              className="stroke-accent/50 opacity-100"
-              strokeWidth="8"
-              strokeLinecap="round"
-            />
-          )}
 
-          {/* Pulse effect if detected */}
+          {/* Stomach (Mid GI) */}
+          <path
+            d="M125 220C110 220 95 230 90 255C85 280 105 300 125 300C145 300 160 280 155 250C150 220 140 220 125 220Z"
+            className={cn(
+              "stroke-white/5 fill-white/5 transition-all duration-500",
+              isDetected && isStomach ? "stroke-accent fill-accent/30 stroke-[3px]" : "stroke-[1.5px]"
+            )}
+          />
+
+          {/* Large Intestine (Lower GI Frame) */}
+          <path
+            d="M95 310H145V380H95V310Z"
+            className={cn(
+              "stroke-white/5 fill-white/5 transition-all duration-500 rounded-lg",
+              isDetected && isLowerGI ? "stroke-accent fill-accent/20 stroke-[3px]" : "stroke-[1.5px]"
+            )}
+            strokeLinejoin="round"
+          />
+
+          {/* Small Intestine (Core Central) */}
+          <path
+            d="M105 325C105 325 110 320 120 320C130 320 135 325 135 325C135 325 140 330 140 340C140 350 130 360 120 360C110 360 100 350 100 340C100 330 105 325 105 325Z"
+            className={cn(
+              "stroke-white/5 fill-white/5 transition-all duration-500",
+              isDetected && isLowerGI ? "stroke-accent/50 fill-accent/10 stroke-[2px]" : "stroke-[1px]"
+            )}
+          />
+
+          {/* Dynamic Highlight Overlays */}
           {isDetected && (
-            <circle 
-              cx="100" 
-              cy={isUpperGI ? "140" : "240"} 
-              r="30" 
-              className="fill-accent/30 animate-ping" 
-            />
+            <g>
+              {isEsophagus && (
+                <>
+                  <circle cx="125" cy="150" r="25" fill="url(#organGlow)" className="animate-pulse" />
+                  <path d="M125 130L125 170" stroke="hsl(var(--accent))" strokeWidth="2" strokeDasharray="4 2" className="animate-[dash_2s_linear_infinite]" />
+                </>
+              )}
+              {isStomach && (
+                <>
+                  <circle cx="122" cy="260" r="35" fill="url(#organGlow)" className="animate-pulse" />
+                  <circle cx="122" cy="260" r="10" className="fill-accent animate-ping" />
+                </>
+              )}
+              {isLowerGI && (
+                <>
+                  <circle cx="120" cy="345" r="40" fill="url(#organGlow)" className="animate-pulse" />
+                  <rect x="105" y="330" width="30" height="30" className="stroke-accent fill-accent/20 animate-bounce" strokeWidth="1" />
+                </>
+              )}
+            </g>
           )}
         </g>
+
+        <style jsx>{`
+          @keyframes dash {
+            to { stroke-dashoffset: -20; }
+          }
+        `}</style>
       </svg>
       
       {isDetected && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none">
-          <div className="bg-accent/20 text-accent border border-accent/50 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse shadow-[0_0_15px_rgba(56,163,117,0.4)]">
-            {isUpperGI ? "Upper GI Anomaly" : isLowerGI ? "Lower GI Anomaly" : "Anomaly Detected"}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 translate-y-24 flex flex-col items-center pointer-events-none z-10">
+          <div className="bg-accent/10 backdrop-blur-md text-accent border border-accent/40 px-5 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] animate-in fade-in zoom-in duration-500 shadow-[0_0_25px_rgba(56,163,117,0.3)]">
+            {isEsophagus ? "Upper GI Focus" : isStomach ? "Gastric Focus" : isLowerGI ? "Lower GI Focus" : "Region Detected"}
           </div>
+          <p className="text-[8px] text-white/40 mt-2 font-bold uppercase tracking-widest">
+            {prediction} Localization
+          </p>
         </div>
       )}
     </div>
