@@ -67,22 +67,22 @@ export default function UploadPage() {
 
     setIsAnalyzing(true)
     try {
-      // 1. Submit to Flask Backend
+      // 1. Analyze with Gemini (Simulating ensemble architectures)
       const analysisResult = await submitGiImageForAnalysis({ imageDataUri: preview })
       
-      // 2. Process results with Gemini for presentation
+      // 2. Process results with Gemini for the detailed UI summary
       const presentationResults = await processAndPresentGiResults({
         overallPrediction: analysisResult.prediction,
         overallConfidence: analysisResult.confidence * 100,
         vggPrediction: analysisResult.vgg_prediction,
-        vggConfidence: 72,
+        vggConfidence: Math.round(analysisResult.vgg_confidence * 100),
         resnetPrediction: analysisResult.resnet_prediction,
-        resnetConfidence: 69,
+        resnetConfidence: Math.round(analysisResult.resnet_confidence * 100),
         inceptionPrediction: analysisResult.inception_prediction,
-        inceptionConfidence: 75
+        inceptionConfidence: Math.round(analysisResult.inception_confidence * 100)
       })
 
-      // 3. Store in Firestore (Client-side mutation)
+      // 3. Store results in Firestore for History
       const predictionsCol = collection(firestore, 'users', user.uid, 'predictions')
       const newDocRef = doc(predictionsCol)
       
@@ -95,11 +95,11 @@ export default function UploadPage() {
         overallPrediction: analysisResult.prediction,
         overallConfidence: Math.round(analysisResult.confidence * 100),
         vgg16Prediction: analysisResult.vgg_prediction,
-        vgg16Confidence: 72,
+        vgg16Confidence: Math.round(analysisResult.vgg_confidence * 100),
         resnet50Prediction: analysisResult.resnet_prediction,
-        resnet50Confidence: 69,
+        resnet50Confidence: Math.round(analysisResult.resnet_confidence * 100),
         inceptionV3Prediction: analysisResult.inception_prediction,
-        inceptionV3Confidence: 75,
+        inceptionV3Confidence: Math.round(analysisResult.inception_confidence * 100),
         status: presentationResults.predictionCard.status
       }
 
@@ -110,6 +110,7 @@ export default function UploadPage() {
         description: `Detection: ${analysisResult.prediction} (${Math.round(analysisResult.confidence * 100)}% confidence)`,
       })
 
+      // Store locally for the immediate results page view
       localStorage.setItem('lastResult', JSON.stringify({ analysisResult, presentationResults, preview }))
       router.push('/results')
 
@@ -117,7 +118,7 @@ export default function UploadPage() {
       console.error(error)
       toast({
         title: "Analysis Failed",
-        description: "Could not connect to the AI backend. Ensure Flask API is running.",
+        description: "AI analysis encountered an error. Please try again.",
         variant: "destructive"
       })
     } finally {
