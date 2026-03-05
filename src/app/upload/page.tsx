@@ -159,22 +159,22 @@ export default function UploadPage() {
       <AppSidebar />
       <SidebarInset className="bg-transparent">
         <Header />
-        <main className="p-6">
-          <div className="max-w-4xl mx-auto space-y-8">
-            <div className="space-y-2">
-              <h1 className="text-3xl font-black tracking-tight text-white">Diagnostic Uploader</h1>
-              <p className="text-muted-foreground">Submit high-resolution endoscopic imagery for ensemble neural analysis.</p>
+        <main className="p-4 md:p-6 overflow-x-hidden">
+          <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
+            <div className="space-y-1">
+              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">Diagnostic Uploader</h1>
+              <p className="text-sm text-muted-foreground">Submit high-resolution endoscopic imagery for ensemble neural analysis.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <Card className="glass-card flex flex-col">
-                <CardHeader>
-                  <CardTitle>Image Submission</CardTitle>
-                  <CardDescription>Drag and drop or click to browse</CardDescription>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
+              <Card className="glass-card flex flex-col order-1">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-lg">Image Submission</CardTitle>
+                  <CardDescription className="text-xs">Drag and drop or click to browse</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
+                <CardContent className="flex-1 flex flex-col min-h-[250px] md:min-h-[350px]">
                   {!preview ? (
-                    <div className="flex-1 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center p-12 hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-pointer relative">
+                    <div className="flex-1 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center p-6 md:p-12 hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-pointer relative">
                       <input 
                         type="file" 
                         onChange={onFileChange} 
@@ -182,13 +182,13 @@ export default function UploadPage() {
                         accept="image/*"
                       />
                       <div className="bg-primary/10 p-4 rounded-full mb-4 group-hover:scale-110 transition-transform">
-                        <Upload className="w-8 h-8 text-primary" />
+                        <Upload className="w-6 h-6 md:w-8 md:h-8 text-primary" />
                       </div>
-                      <p className="font-bold text-white">Drop GI scan here</p>
-                      <p className="text-xs text-muted-foreground mt-1">Supports PNG, JPG (Max 10MB)</p>
+                      <p className="font-bold text-white text-sm md:text-base">Drop GI scan here</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground mt-1">PNG, JPG (Max 10MB)</p>
                     </div>
                   ) : (
-                    <div className="relative flex-1 rounded-2xl overflow-hidden border border-white/10 min-h-[300px]">
+                    <div className="relative flex-1 rounded-2xl overflow-hidden border border-white/10 min-h-[250px]">
                       <Image 
                         src={preview} 
                         alt="Preview" 
@@ -198,7 +198,7 @@ export default function UploadPage() {
                       <Button 
                         size="icon" 
                         variant="destructive" 
-                        className="absolute top-2 right-2 rounded-full w-8 h-8"
+                        className="absolute top-2 right-2 rounded-full w-8 h-8 z-10"
                         onClick={clearFile}
                       >
                         <X className="w-4 h-4" />
@@ -206,15 +206,15 @@ export default function UploadPage() {
                     </div>
                   )}
                 </CardContent>
-                <CardFooter className="flex justify-between items-center gap-4">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4">
+                  <div className="flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground">
                     <CheckCircle2 className="w-3 h-3 text-accent" />
                     Secure Sandbox Inference
                   </div>
                   <Button 
                     disabled={!preview || isAnalyzing || isUserLoading} 
                     onClick={handleAnalysis}
-                    className="cyan-glow bg-primary hover:bg-primary/90 text-background font-bold gap-2 px-8"
+                    className="w-full sm:w-auto cyan-glow bg-primary hover:bg-primary/90 text-background font-bold gap-2 px-8 py-6 sm:py-2"
                   >
                     {isAnalyzing ? (
                       <>
@@ -231,10 +231,10 @@ export default function UploadPage() {
                 </CardFooter>
               </Card>
 
-              <div className="space-y-6">
+              <div className="space-y-6 order-2">
                 <Card className="glass-card">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground font-bold">Inference Protocols</CardTitle>
+                    <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Inference Protocols</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <ProtocolItem 
@@ -255,21 +255,21 @@ export default function UploadPage() {
                   </CardContent>
                 </Card>
 
-                <div className="p-6 rounded-2xl bg-primary/10 border border-primary/20 flex gap-4">
-                   <Info className="w-6 h-6 text-primary shrink-0" />
-                   <div>
-                     <h4 className="font-bold text-primary text-sm">System Note</h4>
-                     <p className="text-[11px] text-primary/80 mt-1 leading-relaxed">
+                <div className="p-4 md:p-6 rounded-2xl bg-primary/10 border border-primary/20 flex gap-4">
+                   <Info className="w-5 h-5 md:w-6 md:h-6 text-primary shrink-0" />
+                   <div className="min-w-0">
+                     <h4 className="font-bold text-primary text-xs md:sm">System Note</h4>
+                     <p className="text-[10px] md:text-[11px] text-primary/80 mt-1 leading-relaxed">
                        This prototype simulates your custom ensemble. It now includes detection for <strong>Esophagitis</strong> and maps <strong>Infection</strong> to upper GI regions.
                      </p>
                    </div>
                 </div>
 
-                <div className="p-6 rounded-2xl bg-destructive/10 border border-destructive/20 flex gap-4">
-                  <AlertCircle className="w-6 h-6 text-destructive shrink-0" />
-                  <div>
-                    <h4 className="font-bold text-destructive text-sm">Medical Disclaimer</h4>
-                    <p className="text-[11px] text-destructive/80 mt-1 leading-relaxed">
+                <div className="p-4 md:p-6 rounded-2xl bg-destructive/10 border border-destructive/20 flex gap-4">
+                  <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-destructive shrink-0" />
+                  <div className="min-w-0">
+                    <h4 className="font-bold text-destructive text-xs md:sm">Medical Disclaimer</h4>
+                    <p className="text-[10px] md:text-[11px] text-destructive/80 mt-1 leading-relaxed">
                       Assistive research purposes only. Results must be validated by a licensed gastroenterologist. DO NOT use for clinical decisions.
                     </p>
                   </div>
@@ -286,10 +286,10 @@ export default function UploadPage() {
 function ProtocolItem({ title, description, active }: { title: string, description: string, active: boolean }) {
   return (
     <div className="flex gap-3">
-      <div className={`mt-0.5 w-2 h-2 rounded-full shrink-0 ${active ? 'bg-primary cyan-glow' : 'bg-muted'}`} />
-      <div>
-        <p className="text-xs font-bold text-white">{title}</p>
-        <p className="text-[10px] text-muted-foreground">{description}</p>
+      <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${active ? 'bg-primary cyan-glow' : 'bg-muted'}`} />
+      <div className="min-w-0">
+        <p className="text-xs font-bold text-white truncate">{title}</p>
+        <p className="text-[10px] text-muted-foreground leading-tight">{description}</p>
       </div>
     </div>
   )

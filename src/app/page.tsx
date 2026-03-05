@@ -23,7 +23,7 @@ export default function DashboardPage() {
       <AppSidebar />
       <SidebarInset className="bg-transparent">
         <Header />
-        <main className="p-6 overflow-y-auto">
+        <main className="p-4 md:p-6 overflow-y-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
             {/* Left Stats Section */}
@@ -56,39 +56,37 @@ export default function DashboardPage() {
               </div>
 
               <Card className="glass-card">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-xl font-bold">Recent Diagnostic Activity</CardTitle>
-                      <CardDescription>Real-time AI analysis feed</CardDescription>
-                    </div>
-                    <Button variant="ghost" size="sm" className="text-primary gap-2" asChild>
-                      <Link href="/reports">View All <ArrowRight className="w-4 h-4" /></Link>
-                    </Button>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                  <div>
+                    <CardTitle className="text-xl font-bold">Recent Diagnostic Activity</CardTitle>
+                    <CardDescription className="text-xs">Real-time AI analysis feed</CardDescription>
                   </div>
+                  <Button variant="ghost" size="sm" className="text-primary gap-2 h-8 px-2" asChild>
+                    <Link href="/reports">View All <ArrowRight className="w-4 h-4" /></Link>
+                  </Button>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {[
                       { id: "RX-901", patient: "John Doe", diagnosis: "Healthy", confidence: "98%", status: "Confirmed", time: "2m ago" },
                       { id: "RX-899", patient: "Alice Smith", diagnosis: "Polyp Detected", confidence: "74%", status: "Pending", time: "15m ago" },
                       { id: "RX-898", patient: "Robert Brown", diagnosis: "Ulcerous Tissue", confidence: "86%", status: "Confirmed", time: "1h ago" },
                     ].map((item) => (
                       <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border border-white/5 hover:bg-secondary/30 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className={`p-2 rounded-lg ${item.diagnosis.includes("Detected") || item.diagnosis.includes("Ulcerous") ? "bg-destructive/10 text-destructive" : "bg-accent/10 text-accent"}`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`p-2 rounded-lg shrink-0 ${item.diagnosis.includes("Detected") || item.diagnosis.includes("Ulcerous") ? "bg-destructive/10 text-destructive" : "bg-accent/10 text-accent"}`}>
                             <Zap className="w-4 h-4" />
                           </div>
-                          <div>
-                            <p className="text-sm font-bold">{item.patient}</p>
-                            <p className="text-[10px] text-muted-foreground">ID: {item.id} • {item.time}</p>
+                          <div className="min-w-0">
+                            <p className="text-sm font-bold truncate">{item.patient}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">ID: {item.id} • {item.time}</p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right shrink-0 ml-4">
                           <p className={`text-xs font-bold ${item.diagnosis.includes("Detected") || item.diagnosis.includes("Ulcerous") ? "text-destructive" : "text-accent"}`}>
                             {item.diagnosis}
                           </p>
-                          <p className="text-[10px] text-muted-foreground">Confidence: {item.confidence}</p>
+                          <p className="text-[10px] text-muted-foreground">Conf: {item.confidence}</p>
                         </div>
                       </div>
                     ))}
@@ -99,10 +97,10 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="glass-card border-l-4 border-l-primary">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground font-bold">System Load</CardTitle>
+                    <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-bold">System Load</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold mb-2">Low Utility</div>
+                    <div className="text-xl font-bold mb-2">Low Utility</div>
                     <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                       <div className="bg-primary h-full w-[15%]" />
                     </div>
@@ -111,11 +109,11 @@ export default function DashboardPage() {
                 </Card>
                 <Card className="glass-card border-l-4 border-l-accent">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm uppercase tracking-wider text-muted-foreground font-bold">Research Updates</CardTitle>
+                    <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Research Updates</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm font-medium">Model v4.2 Deployment</div>
-                    <p className="text-[11px] text-muted-foreground mt-1">
+                    <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
                       New dataset from NIH integrated. Accuracy for "Ulcer" detection improved by 4.5%.
                     </p>
                   </CardContent>
@@ -125,15 +123,17 @@ export default function DashboardPage() {
 
             {/* Right Interactive Section */}
             <div className="lg:col-span-4 space-y-6">
-              <Card className="glass-card h-full flex flex-col overflow-hidden">
+              <Card className="glass-card h-full flex flex-col overflow-hidden min-h-[450px]">
                 <CardHeader className="pb-0">
                   <CardTitle className="text-lg font-bold">Anatomical Monitoring</CardTitle>
-                  <CardDescription>Live GI region visualization</CardDescription>
+                  <CardDescription className="text-xs">Live GI region visualization</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
-                  <HumanBodyVisualizer isDetected={false} />
-                  <div className="mt-4 w-full p-4 rounded-xl bg-secondary/30 border border-white/5 text-center">
-                    <p className="text-xs text-muted-foreground mb-1">Current Focus</p>
+                <CardContent className="flex-1 flex flex-col items-center justify-center py-6">
+                  <div className="w-full max-w-[250px] mx-auto">
+                    <HumanBodyVisualizer isDetected={false} />
+                  </div>
+                  <div className="mt-6 w-full p-4 rounded-xl bg-secondary/30 border border-white/5 text-center max-w-sm mx-auto">
+                    <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider font-bold">Current Focus</p>
                     <p className="text-sm font-bold text-primary">Lower Gastrointestinal Tract</p>
                   </div>
                 </CardContent>
@@ -149,10 +149,10 @@ export default function DashboardPage() {
 
 function StatCard({ title, value, trend, icon: Icon, color, bgColor }: any) {
   return (
-    <Card className="glass-card overflow-hidden group hover:scale-[1.02] transition-transform">
-      <CardContent className="p-6">
+    <Card className="glass-card overflow-hidden group hover:scale-[1.01] transition-transform">
+      <CardContent className="p-5">
         <div className="flex items-center justify-between mb-4">
-          <div className={`p-2.5 rounded-xl ${bgColor} ${color}`}>
+          <div className={`p-2 rounded-xl ${bgColor} ${color}`}>
             <Icon className="w-5 h-5" />
           </div>
           <div className="flex items-center gap-1 text-[10px] font-bold text-accent">
@@ -161,8 +161,8 @@ function StatCard({ title, value, trend, icon: Icon, color, bgColor }: any) {
           </div>
         </div>
         <div>
-          <p className="text-sm text-muted-foreground font-medium">{title}</p>
-          <h3 className="text-3xl font-black mt-1 tracking-tight">{value}</h3>
+          <p className="text-xs text-muted-foreground font-medium">{title}</p>
+          <h3 className="text-2xl font-black mt-1 tracking-tight">{value}</h3>
         </div>
       </CardContent>
       <div className={`h-1 w-full ${bgColor.replace('/10', '/30')}`} />
