@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Zap, Loader2, CheckCircle2, AlertCircle, Info, ShieldCheck } from "lucide-react"
+import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { useToast } from "@/hooks/use-toast"
@@ -98,7 +98,8 @@ export default function UploadPage() {
         status: result.status!,
         tuningMetrics: {
           baseAccuracy: result.overallBaseAccuracy,
-          tunedAccuracy: result.overallTunedAccuracy
+          tunedAccuracy: result.overallTunedAccuracy,
+          overallAccuracy: result.overallAccuracy
         }
       }
 
@@ -128,7 +129,8 @@ export default function UploadPage() {
         },
         tuning: {
           base: result.overallBaseAccuracy,
-          tuned: result.overallTunedAccuracy
+          tuned: result.overallTunedAccuracy,
+          overall: result.overallAccuracy
         }
       }
 
@@ -165,19 +167,19 @@ export default function UploadPage() {
         <main className="p-4 md:p-6">
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="space-y-1">
-              <h1 className="text-2xl md:text-3xl font-black text-white">Diagnostic Engine</h1>
-              <p className="text-sm text-muted-foreground">Upload scans for hyperparameter-tuned ensemble analysis.</p>
+              <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">Diagnostic Engine</h1>
+              <p className="text-sm text-muted-foreground">Upload GI scans for hyperparameter-tuned ensemble analysis.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
               <Card className="glass-card lg:col-span-7 flex flex-col">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg font-bold">Image Submission</CardTitle>
-                  <CardDescription className="text-xs">Processing via cloud-based tuned models</CardDescription>
+                  <CardDescription className="text-xs">Consolidated analysis via cloud-tuned models</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col min-h-[300px]">
                   {!preview ? (
-                    <div className="flex-1 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center p-8 hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-pointer relative">
+                    <div className="flex-1 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center p-8 hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-pointer relative text-center">
                       <input 
                         type="file" 
                         onChange={onFileChange} 
@@ -188,7 +190,7 @@ export default function UploadPage() {
                         <Upload className="w-8 h-8 text-primary" />
                       </div>
                       <p className="font-bold text-white">Drop GI scan here</p>
-                      <p className="text-xs text-muted-foreground mt-1">Maximum file size: 10MB</p>
+                      <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">PNG or JPG up to 10MB</p>
                     </div>
                   ) : (
                     <div className="relative flex-1 rounded-2xl overflow-hidden border border-white/10 bg-black/40">
@@ -210,24 +212,24 @@ export default function UploadPage() {
                   )}
                 </CardContent>
                 <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-white/5 mt-4">
-                  <div className="flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground font-bold">
                     <ShieldCheck className="w-4 h-4 text-accent" />
-                    HIPAA-Compliant Processing
+                    SECURE BACKEND ENCRYPTION
                   </div>
                   <Button 
                     disabled={!preview || isAnalyzing || isUserLoading} 
                     onClick={handleAnalysis}
-                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-background font-black gap-2 px-8 py-6 sm:py-2 shadow-lg shadow-primary/20"
+                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-background font-black gap-2 px-8 py-6 sm:py-2 shadow-lg shadow-primary/20 uppercase tracking-widest"
                   >
                     {isAnalyzing ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
-                        Tuning Backend...
+                        Analyzing...
                       </>
                     ) : (
                       <>
                         <Zap className="w-4 h-4" />
-                        Run Tuned Diagnostic
+                        Run Diagnostic
                       </>
                     )}
                   </Button>
@@ -237,22 +239,22 @@ export default function UploadPage() {
               <div className="lg:col-span-5 space-y-6">
                 <Card className="glass-card">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-bold">Optimization Protocols</CardTitle>
+                    <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-black">Backend Protocols</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <ProtocolItem 
-                      title="Hyperparameter Tuning" 
-                      description="Backend HPO optimization active for current ensemble weights."
+                      title="HPO Optimization" 
+                      description="Hyperparameter tuning active for weighted model ensemble."
                       active={true}
                     />
                     <ProtocolItem 
-                      title="Majority Voting" 
-                      description="Results validated by a 3-model weighted consensus engine."
+                      title="Consensus Voting" 
+                      description="Majority vote logic applied to VGG16, ResNet50, and InceptionV3."
                       active={true}
                     />
                     <ProtocolItem 
-                      title="Anatomical Mapping" 
-                      description="Upper/Lower GI region localization based on diagnostic find."
+                      title="Diagnostic Mapping" 
+                      description="Anatomical localization based on identified GI condition."
                       active={true}
                     />
                   </CardContent>
@@ -261,9 +263,9 @@ export default function UploadPage() {
                 <div className="p-5 rounded-2xl bg-accent/10 border border-accent/20 flex gap-4">
                    <Zap className="w-6 h-6 text-accent shrink-0" />
                    <div>
-                     <h4 className="font-bold text-accent text-sm">Performance Note</h4>
-                     <p className="text-[11px] text-accent/80 mt-1 leading-relaxed">
-                       Hyperparameter tuning has increased the current model's overall accuracy from <strong>82.4%</strong> to <strong>94.2%</strong>.
+                     <h4 className="font-black text-accent text-xs uppercase tracking-widest">Efficiency Note</h4>
+                     <p className="text-[10px] text-accent/80 mt-1 leading-relaxed">
+                       Tuning has increased ensemble accuracy from <strong>82.4%</strong> to <strong>94.2%</strong>.
                      </p>
                    </div>
                 </div>
@@ -271,9 +273,9 @@ export default function UploadPage() {
                 <div className="p-5 rounded-2xl bg-destructive/10 border border-destructive/20 flex gap-4">
                   <AlertCircle className="w-6 h-6 text-destructive shrink-0" />
                   <div>
-                    <h4 className="font-bold text-destructive text-sm">Clinical Warning</h4>
-                    <p className="text-[11px] text-destructive/80 mt-1 leading-relaxed">
-                      AI outputs are for research support only. Final clinical decisions must be made by a board-certified specialist.
+                    <h4 className="font-black text-destructive text-xs uppercase tracking-widest">Medical Disclaimer</h4>
+                    <p className="text-[10px] text-destructive/80 mt-1 leading-relaxed">
+                      AI outputs are research-only and must be verified by a board-certified GI specialist.
                     </p>
                   </div>
                 </div>
@@ -291,7 +293,7 @@ function ProtocolItem({ title, description, active }: any) {
     <div className="flex gap-3">
       <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${active ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary))]' : 'bg-muted'}`} />
       <div className="min-w-0">
-        <p className="text-xs font-bold text-white truncate">{title}</p>
+        <p className="text-[11px] font-black text-white uppercase truncate">{title}</p>
         <p className="text-[10px] text-muted-foreground leading-tight">{description}</p>
       </div>
     </div>
