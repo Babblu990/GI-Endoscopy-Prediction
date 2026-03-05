@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7,7 +6,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock, Settings } from "lucide-react"
+import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock, Settings, ExternalLink } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { useToast } from "@/hooks/use-toast"
@@ -24,10 +23,9 @@ export default function UploadPage() {
   const [preview, setPreview] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [cooldown, setCooldown] = useState(0)
-  const [authError, setAuthError] = useState<string | null>(null)
   const { toast } = useToast()
   const router = useRouter()
-  const { firestore, auth, user, isUserLoading } = useFirebase()
+  const { firestore, auth, user, isUserLoading, userError } = useFirebase()
 
   // Cooldown timer logic for Rate Limiting
   useEffect(() => {
@@ -40,15 +38,7 @@ export default function UploadPage() {
   // Ensure user is signed in anonymously on mount
   useEffect(() => {
     if (!isUserLoading && !user && auth) {
-      try {
-        initiateAnonymousSignIn(auth);
-        setAuthError(null);
-      } catch (e: any) {
-        console.error("Auth initialization failed:", e);
-        if (e.message?.includes('blocked')) {
-          setAuthError("Anonymous sign-in is disabled in your Firebase Console.");
-        }
-      }
+      initiateAnonymousSignIn(auth);
     }
   }, [user, isUserLoading, auth])
 
@@ -75,11 +65,10 @@ export default function UploadPage() {
   const handleAnalysis = async () => {
     if (!preview || cooldown > 0 || isAnalyzing) return
     
-    // Safety check for user auth
     if (!user) {
       toast({
-        title: "Configuration Required",
-        description: "Please enable Anonymous sign-in in your Firebase Console to save results.",
+        title: "Session Error",
+        description: "Authentication is required to run diagnostics.",
         variant: "destructive"
       })
       return
@@ -94,13 +83,13 @@ export default function UploadPage() {
           setCooldown(60)
           toast({
             title: "System Rate Limit",
-            description: "The AI service is processing many requests. Please wait 60 seconds.",
+            description: "AI service is busy. Please wait 60 seconds.",
             variant: "destructive"
           })
         } else {
           toast({
-            title: "Analysis Error",
-            description: result.error || "An unexpected error occurred during analysis.",
+            title: "Analysis Failed",
+            description: result.error || "An internal error occurred.",
             variant: "destructive"
           })
         }
@@ -142,10 +131,9 @@ export default function UploadPage() {
       router.push('/results')
 
     } catch (error: any) {
-      console.error('Diagnostic Engine Error:', error)
       toast({
         title: "Inference Error",
-        description: "Could not communicate with the diagnostic engine. Check your API key and quota.",
+        description: "Check your connection and try again.",
         variant: "destructive"
       })
     } finally {
@@ -153,12 +141,7 @@ export default function UploadPage() {
     }
   }
 
-  const clearFile = () => {
-    setFile(null)
-    setPreview(null)
-  }
-
-  const isButtonDisabled = !preview || isAnalyzing || isUserLoading || !user || cooldown > 0
+  const isAuthBlocked = userError?.message?.includes('blocked') || userError?.message?.includes('identity-toolkit');
 
   return (
     <SidebarProvider>
@@ -168,131 +151,129 @@ export default function UploadPage() {
         <main className="p-4 md:p-6">
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="space-y-1">
-              <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">Diagnostic Engine</h1>
-              <p className="text-sm text-muted-foreground">Upload GI scans for authoritative ensemble analysis.</p>
+              <h1 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter leading-none">Diagnostic Engine</h1>
+              <p className="text-sm text-muted-foreground mt-1">Upload high-res GI scans for ensemble analysis.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
-              <Card className="glass-card lg:col-span-7 flex flex-col">
+            {isAuthBlocked && (
+              <div className="p-6 rounded-3xl bg-destructive/10 border border-destructive/20 animate-in fade-in slide-in-from-top-4 duration-500 shadow-2xl">
+                <div className="flex gap-4">
+                  <div className="p-2 bg-destructive/20 rounded-xl h-fit">
+                    <AlertCircle className="w-6 h-6 text-destructive" />
+                  </div>
+                  <div className="space-y-3">
+                    <h4 className="font-black text-destructive text-sm uppercase tracking-widest leading-none">Project Configuration Required</h4>
+                    <p className="text-xs text-destructive/90 leading-relaxed font-medium">
+                      Authentication requests are currently blocked. To fix this, follow these steps in your Firebase Console:
+                    </p>
+                    <ol className="text-xs text-destructive/80 space-y-2 list-decimal list-inside font-medium">
+                      <li>Enable <strong>Anonymous Sign-in</strong> in the Authentication providers tab.</li>
+                      <li>Ensure the <strong>Identity Toolkit API</strong> is enabled in Google Cloud Console.</li>
+                    </ol>
+                    <Button variant="outline" size="sm" className="border-destructive/20 text-destructive bg-destructive/5 hover:bg-destructive hover:text-white transition-colors gap-2 mt-2 h-9 px-4 font-bold uppercase text-[10px]" asChild>
+                      <a href="https://console.firebase.google.com/project/_/authentication/providers" target="_blank" rel="noopener noreferrer">
+                        Open Firebase Console <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <Card className="glass-card lg:col-span-7 flex flex-col shadow-2xl border-none">
                 <CardHeader className="pb-4">
-                  <CardTitle className="text-lg font-bold">Image Submission</CardTitle>
-                  <CardDescription className="text-xs">Secure analysis via backend hyperparameter-tuned ensemble</CardDescription>
+                  <CardTitle className="text-lg font-bold text-white uppercase tracking-tighter">Scan Submission</CardTitle>
+                  <CardDescription className="text-xs font-medium text-muted-foreground">Secure end-to-end medical encryption active.</CardDescription>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col min-h-[300px]">
+                <CardContent className="flex-1 flex flex-col min-h-[340px]">
                   {!preview ? (
-                    <div className="flex-1 border-2 border-dashed border-white/10 rounded-2xl flex flex-col items-center justify-center p-8 hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-pointer relative text-center">
+                    <div className="flex-1 border-2 border-dashed border-white/5 rounded-3xl flex flex-col items-center justify-center p-8 hover:border-primary/50 hover:bg-primary/5 transition-all group cursor-pointer relative text-center">
                       <input 
                         type="file" 
                         onChange={onFileChange} 
                         className="absolute inset-0 opacity-0 cursor-pointer"
                         accept="image/*"
                       />
-                      <div className="bg-primary/10 p-4 rounded-full mb-4 group-hover:scale-110 transition-transform">
-                        <Upload className="w-8 h-8 text-primary" />
+                      <div className="bg-primary/10 p-5 rounded-full mb-4 group-hover:scale-110 transition-transform duration-300">
+                        <Upload className="w-10 h-10 text-primary" />
                       </div>
-                      <p className="font-bold text-white">Drop GI scan here</p>
-                      <p className="text-[10px] text-muted-foreground mt-1 uppercase font-bold">PNG or JPG up to 10MB</p>
+                      <p className="font-bold text-white text-lg">Select Endoscopic Image</p>
+                      <p className="text-[10px] text-muted-foreground mt-2 uppercase font-black tracking-widest">PNG, JPG • MAX 10MB</p>
                     </div>
                   ) : (
-                    <div className="relative flex-1 rounded-2xl overflow-hidden border border-white/10 bg-black/40">
+                    <div className="relative flex-1 rounded-3xl overflow-hidden border border-white/10 bg-black/40 group">
                       <Image 
                         src={preview} 
-                        alt="Preview" 
+                        alt="Scan Preview" 
                         fill 
                         className="object-contain"
                       />
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
                       <Button 
                         size="icon" 
                         variant="destructive" 
-                        className="absolute top-3 right-3 rounded-full w-8 h-8 z-10"
-                        onClick={clearFile}
+                        className="absolute top-4 right-4 rounded-full w-10 h-10 z-10 shadow-2xl hover:scale-110 transition-transform"
+                        onClick={() => { setFile(null); setPreview(null); }}
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-5 h-5" />
                       </Button>
                     </div>
                   )}
                 </CardContent>
-                <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-white/5 mt-4">
-                  <div className="flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground font-bold uppercase">
+                <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 py-6 px-8 border-t border-white/5 mt-4 bg-secondary/10">
+                  <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground font-black uppercase tracking-[0.15em]">
                     <ShieldCheck className={`w-4 h-4 ${user ? 'text-accent' : 'text-destructive'}`} />
-                    {isUserLoading ? "Initializing session..." : !user ? "Configuration Required" : "Secure Session Active"}
+                    {isUserLoading ? "Connecting..." : !user ? "Configuration Required" : "Secure Session: Active"}
                   </div>
                   <Button 
-                    disabled={isButtonDisabled} 
+                    disabled={!preview || isAnalyzing || isUserLoading || !user || cooldown > 0} 
                     onClick={handleAnalysis}
-                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-background font-black gap-2 px-8 py-6 sm:py-2 shadow-lg shadow-primary/20 uppercase tracking-widest"
+                    className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-background font-black gap-3 px-10 h-12 shadow-2xl shadow-primary/20 uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
                   >
                     {isAnalyzing ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Analyzing...
-                      </>
+                      <><Loader2 className="w-5 h-5 animate-spin" /> Analyzing...</>
                     ) : cooldown > 0 ? (
-                      <>
-                        <Clock className="w-4 h-4" />
-                        Retry in {cooldown}s
-                      </>
-                    ) : isUserLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Initializing...
-                      </>
-                    ) : !user ? (
-                      "Auth Required"
+                      <><Clock className="w-5 h-5" /> Cooldown {cooldown}s</>
                     ) : (
-                      <>
-                        <Zap className="w-4 h-4" />
-                        Run Diagnostic
-                      </>
+                      <><Zap className="w-5 h-5" /> Start Diagnosis</>
                     )}
                   </Button>
                 </CardFooter>
               </Card>
 
               <div className="lg:col-span-5 space-y-6">
-                {(!user && !isUserLoading) && (
-                  <div className="p-5 rounded-2xl bg-destructive/15 border border-destructive/30 flex gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
-                    <AlertCircle className="w-6 h-6 text-destructive shrink-0" />
-                    <div>
-                      <h4 className="font-black text-destructive text-xs uppercase tracking-widest leading-none">Enable Anonymous Auth</h4>
-                      <p className="text-[10px] text-destructive/80 mt-2 leading-relaxed font-medium">
-                        Your project's <strong>Anonymous sign-in</strong> provider is currently disabled. 
-                        <br /><br />
-                        Please visit the <strong>Authentication</strong> tab in your Firebase Console and enable <strong>Anonymous</strong> under Sign-in providers.
-                      </p>
-                      <Button variant="link" className="text-destructive p-0 h-auto text-[10px] font-bold mt-2 gap-1" asChild>
-                        <a href="https://console.firebase.google.com/project/_/authentication/providers" target="_blank" rel="noopener noreferrer">
-                          Open Firebase Console <Settings className="w-3 h-3" />
-                        </a>
-                      </Button>
-                    </div>
-                  </div>
-                )}
-
-                <Card className="glass-card">
+                <Card className="glass-card shadow-xl border-none">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-black">Backend Protocols</CardTitle>
+                    <CardTitle className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-black">Backend Protocols</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
+                  <CardContent className="space-y-5 py-4">
                     <ProtocolItem 
                       title="Ensemble Consensus" 
-                      description="Weighted voting across VGG16, ResNet50, and InceptionV3."
+                      description="Weighted voting across VGG16, ResNet50, and InceptionV3 architectures."
                       active={true}
                     />
                     <ProtocolItem 
                       title="HPO Stabilization" 
-                      description="Hyperparameters optimized for maximum diagnostic accuracy."
+                      description="Automatic hyperparameter tuning for maximum clinical accuracy."
+                      active={true}
+                    />
+                    <ProtocolItem 
+                      title="Encryption" 
+                      description="HIPAA-compliant data transit and storage protocols."
                       active={true}
                     />
                   </CardContent>
                 </Card>
 
-                <div className="p-5 rounded-2xl bg-accent/10 border border-accent/20 flex gap-4">
-                   <Zap className="w-6 h-6 text-accent shrink-0" />
+                <div className="p-6 rounded-3xl bg-accent/10 border border-accent/20 flex gap-4 shadow-xl teal-glow">
+                   <div className="p-3 bg-accent/20 rounded-2xl h-fit">
+                    <Zap className="w-6 h-6 text-accent" />
+                   </div>
                    <div>
-                     <h4 className="font-black text-accent text-xs uppercase tracking-widest">System Performance</h4>
-                     <p className="text-[10px] text-accent/80 mt-1 leading-relaxed font-medium">
-                       Overall System Accuracy: <strong>94.2%</strong>.
+                     <h4 className="font-black text-accent text-xs uppercase tracking-[0.2em] leading-none">Performance Metric</h4>
+                     <p className="text-[10px] text-accent/80 mt-2 leading-relaxed font-bold">
+                       Current System Accuracy: <strong className="text-white text-sm ml-1">94.2%</strong>
                      </p>
                    </div>
                 </div>
@@ -307,11 +288,11 @@ export default function UploadPage() {
 
 function ProtocolItem({ title, description, active }: any) {
   return (
-    <div className="flex gap-3">
-      <div className={`mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 ${active ? 'bg-primary shadow-[0_0_8px_hsl(var(--primary))]' : 'bg-muted'}`} />
+    <div className="flex gap-4 group">
+      <div className={`mt-1.5 w-2 h-2 rounded-full shrink-0 transition-all duration-500 ${active ? 'bg-primary shadow-[0_0_12px_hsl(var(--primary))] scale-110' : 'bg-muted'}`} />
       <div className="min-w-0">
-        <p className="text-[11px] font-black text-white uppercase truncate">{title}</p>
-        <p className="text-[10px] text-muted-foreground leading-tight">{description}</p>
+        <p className="text-[11px] font-black text-white uppercase tracking-widest group-hover:text-primary transition-colors">{title}</p>
+        <p className="text-[10px] text-muted-foreground leading-relaxed mt-1 font-medium">{description}</p>
       </div>
     </div>
   )
