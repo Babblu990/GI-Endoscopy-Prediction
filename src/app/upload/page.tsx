@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock, Settings, ExternalLink } from "lucide-react"
+import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock, ExternalLink } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { useToast } from "@/hooks/use-toast"
@@ -141,8 +141,8 @@ export default function UploadPage() {
     }
   }
 
-  // Detect if auth is blocked by project configuration
-  const isAuthBlocked = userError?.message?.includes('blocked') || userError?.message?.includes('identity-toolkit');
+  // Detect if auth is blocked by project configuration (Anonymous Sign-in not enabled)
+  const isAuthBlocked = userError?.message?.includes('signup-are-blocked') || userError?.message?.includes('identity-toolkit');
 
   return (
     <SidebarProvider>
@@ -163,17 +163,18 @@ export default function UploadPage() {
                     <AlertCircle className="w-6 h-6 text-destructive" />
                   </div>
                   <div className="space-y-3">
-                    <h4 className="font-black text-destructive text-sm uppercase tracking-widest leading-none">Project Configuration Required</h4>
+                    <h4 className="font-black text-destructive text-sm uppercase tracking-widest leading-none">Authentication Service Blocked</h4>
                     <p className="text-xs text-destructive/90 leading-relaxed font-medium">
-                      Authentication requests are currently blocked. To fix this, follow these steps in your Firebase Console:
+                      Firebase reports that anonymous sign-up is blocked. You must manually enable it in your console to run diagnostics:
                     </p>
                     <ol className="text-xs text-destructive/80 space-y-2 list-decimal list-inside font-medium">
-                      <li>Enable <strong>Anonymous Sign-in</strong> in the Authentication providers tab.</li>
-                      <li>Ensure the <strong>Identity Toolkit API</strong> is enabled in Google Cloud Console.</li>
+                      <li>Visit the <strong>Authentication > Sign-in method</strong> tab.</li>
+                      <li>Enable the <strong>Anonymous</strong> provider.</li>
+                      <li>Ensure the <strong>Identity Toolkit API</strong> is enabled in Google Cloud.</li>
                     </ol>
                     <Button variant="outline" size="sm" className="border-destructive/20 text-destructive bg-destructive/5 hover:bg-destructive hover:text-white transition-colors gap-2 mt-2 h-9 px-4 font-bold uppercase text-[10px]" asChild>
                       <a href="https://console.firebase.google.com/project/_/authentication/providers" target="_blank" rel="noopener noreferrer">
-                        Open Firebase Console <ExternalLink className="w-3 h-3" />
+                        Fix in Firebase Console <ExternalLink className="w-3 h-3" />
                       </a>
                     </Button>
                   </div>
@@ -225,7 +226,7 @@ export default function UploadPage() {
                 <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 py-6 px-8 border-t border-white/5 mt-4 bg-secondary/10">
                   <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground font-black uppercase tracking-[0.15em]">
                     <ShieldCheck className={`w-4 h-4 ${user ? 'text-accent' : 'text-destructive'}`} />
-                    {isUserLoading ? "Connecting..." : !user ? "Configuration Required" : "Secure Session: Active"}
+                    {isUserLoading ? "Initializing..." : !user ? "Auth Required" : "Secure Session: Active"}
                   </div>
                   <Button 
                     disabled={!preview || isAnalyzing || isUserLoading || !user || cooldown > 0} 
