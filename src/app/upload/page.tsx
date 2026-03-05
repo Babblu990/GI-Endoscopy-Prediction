@@ -65,9 +65,18 @@ export default function UploadPage() {
 
     setIsAnalyzing(true)
     try {
-      // Single call to consolidated AI flow (reduces API quota usage by 50%)
       const result = await submitGiImageForAnalysis({ imageDataUri: preview })
       
+      if (result.error) {
+        toast({
+          title: result.isQuotaExceeded ? "Quota Exceeded" : "Analysis Failed",
+          description: result.error,
+          variant: "destructive"
+        })
+        setIsAnalyzing(false)
+        return
+      }
+
       // Store results in Firestore for History
       const predictionsCol = collection(firestore, 'users', user.uid, 'predictions')
       const newDocRef = doc(predictionsCol)
@@ -78,45 +87,45 @@ export default function UploadPage() {
         uploadedAt: new Date().toISOString(),
         imageUrl: preview,
         originalFileName: file?.name || 'scan.jpg',
-        overallPrediction: result.prediction,
-        overallConfidence: Math.round(result.confidence * 100),
-        vgg16Prediction: result.vgg16.prediction,
-        vgg16Confidence: Math.round(result.vgg16.confidence * 100),
-        resnet50Prediction: result.resnet50.prediction,
-        resnet50Confidence: Math.round(result.resnet50.confidence * 100),
-        inceptionV3Prediction: result.inceptionV3.prediction,
-        inceptionV3Confidence: Math.round(result.inceptionV3.confidence * 100),
-        status: result.status
+        overallPrediction: result.prediction!,
+        overallConfidence: Math.round(result.confidence! * 100),
+        vgg16Prediction: result.vgg16!.prediction,
+        vgg16Confidence: Math.round(result.vgg16!.confidence * 100),
+        resnet50Prediction: result.resnet50!.prediction,
+        resnet50Confidence: Math.round(result.resnet50!.confidence * 100),
+        inceptionV3Prediction: result.inceptionV3!.prediction,
+        inceptionV3Confidence: Math.round(result.inceptionV3!.confidence * 100),
+        status: result.status!
       }
 
       setDocumentNonBlocking(newDocRef, predictionData, { merge: true })
 
       toast({
         title: "Analysis Complete",
-        description: `Detection: ${result.prediction} (${Math.round(result.confidence * 100)}% confidence)`,
+        description: `Detection: ${result.prediction} (${Math.round(result.confidence! * 100)}% confidence)`,
       })
 
       // Construct formatted local storage data for the results page
       const presentationResults = {
         predictionCard: {
-          prediction: result.prediction,
-          confidence: Math.round(result.confidence * 100),
-          status: result.status
+          prediction: result.prediction!,
+          confidence: Math.round(result.confidence! * 100),
+          status: result.status!
         },
         modelVoting: {
           vgg16: {
-            prediction: result.vgg16.prediction,
-            confidence: Math.round(result.vgg16.confidence * 100)
+            prediction: result.vgg16!.prediction,
+            confidence: Math.round(result.vgg16!.confidence * 100)
           },
           resnet50: {
-            prediction: result.resnet50.prediction,
-            confidence: Math.round(result.resnet50.confidence * 100)
+            prediction: result.resnet50!.prediction,
+            confidence: Math.round(result.resnet50!.confidence * 100)
           },
           inceptionv3: {
-            prediction: result.inceptionV3.prediction,
-            confidence: Math.round(result.inceptionV3.confidence * 100)
+            prediction: result.inceptionV3!.prediction,
+            confidence: Math.round(result.inceptionV3!.confidence * 100)
           },
-          majorityVoteResult: result.majorityVoteResult
+          majorityVoteResult: result.majorityVoteResult!
         }
       }
 
@@ -130,13 +139,9 @@ export default function UploadPage() {
 
     } catch (error: any) {
       console.error(error)
-      const isQuotaError = error.message?.includes('429') || error.message?.includes('quota')
-      
       toast({
-        title: isQuotaError ? "Quota Exceeded" : "Analysis Failed",
-        description: isQuotaError 
-          ? "The AI service is currently at capacity. Please wait a minute before trying again." 
-          : "AI analysis encountered an error. Please try again.",
+        title: "System Error",
+        description: "An unexpected error occurred during processing.",
         variant: "destructive"
       })
     } finally {
@@ -238,8 +243,8 @@ export default function UploadPage() {
                       active={true}
                     />
                     <ProtocolItem 
-                      title="Medical Image Proxy" 
-                      description="Using Gemini 2.5 Flash as a high-precision diagnostic interpreter."
+                      title="Esophagus Tracking" 
+                      description="Specialized mapping for Esophagitis and upper GI infections."
                       active={true}
                     />
                     <ProtocolItem 

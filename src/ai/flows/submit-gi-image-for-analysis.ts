@@ -28,17 +28,21 @@ const ModelOutputSchema = z.object({
 
 const SubmitGiImageForAnalysisOutputSchema = z.object({
   // Core prediction data
-  prediction: z.string().describe('The overall consensus prediction.'),
-  confidence: z.number().describe('The overall consensus confidence score.'),
-  status: z.string().describe('Status message, e.g., "Detected" or "No Disease Detected".'),
+  prediction: z.string().optional().describe('The overall consensus prediction.'),
+  confidence: z.number().optional().describe('The overall consensus confidence score.'),
+  status: z.string().optional().describe('Status message, e.g., "Detected" or "No Disease Detected".'),
   
   // Ensemble components
-  vgg16: ModelOutputSchema.describe('Simulated VGG16 model output.'),
-  resnet50: ModelOutputSchema.describe('Simulated ResNet50 model output.'),
-  inceptionV3: ModelOutputSchema.describe('Simulated InceptionV3 model output.'),
+  vgg16: ModelOutputSchema.optional().describe('Simulated VGG16 model output.'),
+  resnet50: ModelOutputSchema.optional().describe('Simulated ResNet50 model output.'),
+  inceptionV3: ModelOutputSchema.optional().describe('Simulated InceptionV3 model output.'),
   
   // Voting logic
-  majorityVoteResult: z.string().describe('The result determined by majority voting among the three models.'),
+  majorityVoteResult: z.string().optional().describe('The result determined by majority voting.'),
+  
+  // Error handling
+  error: z.string().optional().describe('Error message if the analysis failed due to quota or other issues.'),
+  isQuotaExceeded: z.boolean().optional().describe('True if the API quota was exceeded.'),
 });
 export type SubmitGiImageForAnalysisOutput = z.infer<typeof SubmitGiImageForAnalysisOutputSchema>;
 
@@ -58,19 +62,19 @@ Analyze the following endoscopic image: {{media url=imageDataUri}}
 
 Identify if the tissue appears 'Healthy' or if there are signs of conditions like 'Polyp', 'Ulcer', 'Infection', 'Tumor', or 'Esophagitis'. 
 
-CRITICAL MAPPING:
-- 'Esophagitis' and 'Infection' are upper GI tract conditions (Esophagus).
+CRITICAL ANATOMICAL MAPPING:
+- 'Esophagitis' and 'Infection' MUST be identified as upper GI tract conditions (Esophagus).
 - 'Polyp', 'Ulcer', and 'Tumor' are usually stomach or lower GI tract conditions.
 
 SIMULATE ENSEMBLE VOTING (VGG16, ResNet50, InceptionV3):
-1. VGG16: Sensitive to color/texture (e.g., redness in Esophagitis).
+1. VGG16: Sensitive to color/texture (e.g., redness/inflammation in Esophagitis).
 2. ResNet50: Strong at structural anomalies (e.g., Polyps, Tumors).
-3. InceptionV3: Excellent at multi-scale features.
+3. InceptionV3: Excellent at multi-scale features for complex lesions.
 
 Provide:
 - A consensus 'prediction' and 'confidence'.
 - Individual outputs for 'vgg16', 'resnet50', and 'inceptionV3'.
-- A 'majorityVoteResult' based on these three. If two or more models agree, that is the majority.
+- A 'majorityVoteResult' based on these three.
 - A 'status' (set to 'Detected' if any disease is found, or 'Normal' if healthy).
 
 Return the full report in JSON.`,
@@ -86,14 +90,16 @@ const submitGiImageForAnalysisFlow = ai.defineFlow(
     try {
       const { output } = await giAnalysisPrompt(input);
       if (!output) {
-        throw new Error('AI failed to produce a diagnostic output.');
+        return { error: 'AI failed to produce a diagnostic output.' };
       }
       return output;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error during consolidated GI analysis flow:', error);
-      throw new Error(
-        `Analysis Failed: ${(error as Error).message}`
-      );
+      const isQuota = error.message?.includes('429') || error.message?.includes('quota') || error.message?.includes('RESOURCE_EXHAUSTED');
+      return { 
+        error: isQuota ? 'AI service quota exceeded. Please wait 60 seconds.' : error.message,
+        isQuotaExceeded: isQuota
+      };
     }
   }
 );
