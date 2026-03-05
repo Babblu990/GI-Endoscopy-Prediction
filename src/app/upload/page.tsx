@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -23,6 +24,7 @@ export default function UploadPage() {
   const [preview, setPreview] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [cooldown, setCooldown] = useState(0)
+  const [localAuthError, setLocalAuthError] = useState<string | null>(null)
   const { toast } = useToast()
   const router = useRouter()
   const { firestore, auth, user, isUserLoading, userError } = useFirebase()
@@ -38,7 +40,9 @@ export default function UploadPage() {
   // Ensure user is signed in anonymously on mount
   useEffect(() => {
     if (!isUserLoading && !user && auth) {
-      initiateAnonymousSignIn(auth);
+      initiateAnonymousSignIn(auth, (err) => {
+        setLocalAuthError(err?.message || String(err));
+      });
     }
   }, [user, isUserLoading, auth])
 
@@ -141,8 +145,9 @@ export default function UploadPage() {
     }
   }
 
-  // Detect if auth is blocked by project configuration (Anonymous Sign-in not enabled)
-  const isAuthBlocked = userError?.message?.includes('signup-are-blocked') || userError?.message?.includes('identity-toolkit');
+  // Detect if auth is blocked by project configuration
+  const combinedError = userError?.message || localAuthError || "";
+  const isAuthBlocked = combinedError.includes('signup-are-blocked') || combinedError.includes('identity-toolkit');
 
   return (
     <SidebarProvider>
