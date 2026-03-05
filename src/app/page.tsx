@@ -8,7 +8,6 @@ import { HumanBodyVisualizer } from "@/components/dashboard/human-body-visualize
 import { 
   Activity, 
   TrendingUp, 
-  Users, 
   FileCheck, 
   ArrowRight,
   ShieldCheck,
@@ -38,9 +37,9 @@ export default function DashboardPage() {
                   bgColor="bg-primary/10"
                 />
                 <StatCard 
-                  title="Accuracy" 
+                  title="Tuned Accuracy" 
                   value="94.2%" 
-                  trend="+2.1%" 
+                  trend="+11.8%" 
                   icon={ShieldCheck} 
                   color="text-accent"
                   bgColor="bg-accent/10"
@@ -73,7 +72,7 @@ export default function DashboardPage() {
                       { id: "RX-898", patient: "Robert Brown", diagnosis: "Ulcerous Tissue", confidence: "86%", status: "Confirmed", time: "1h ago" },
                     ].map((item) => (
                       <div key={item.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/20 border border-white/5 hover:bg-secondary/30 transition-colors">
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
                           <div className={`p-2 rounded-lg shrink-0 ${item.diagnosis.includes("Detected") || item.diagnosis.includes("Ulcerous") ? "bg-destructive/10 text-destructive" : "bg-accent/10 text-accent"}`}>
                             <Zap className="w-4 h-4" />
                           </div>
@@ -100,7 +99,7 @@ export default function DashboardPage() {
                     <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-bold">System Load</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-xl font-bold mb-2">Low Utility</div>
+                    <div className="text-xl font-bold mb-2">Optimized Inference</div>
                     <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
                       <div className="bg-primary h-full w-[15%]" />
                     </div>
@@ -109,12 +108,12 @@ export default function DashboardPage() {
                 </Card>
                 <Card className="glass-card border-l-4 border-l-accent">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Research Updates</CardTitle>
+                    <CardTitle className="text-xs uppercase tracking-wider text-muted-foreground font-bold">Optimization Impact</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-sm font-medium">Model v4.2 Deployment</div>
                     <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
-                      New dataset from NIH integrated. Accuracy for "Ulcer" detection improved by 4.5%.
+                      Overall accuracy increased from 82.4% to 94.2%. Detection of "Esophagitis" now active.
                     </p>
                   </CardContent>
                 </Card>
@@ -134,7 +133,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-6 w-full p-4 rounded-xl bg-secondary/30 border border-white/5 text-center max-w-sm mx-auto">
                     <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-wider font-bold">Current Focus</p>
-                    <p className="text-sm font-bold text-primary">Lower Gastrointestinal Tract</p>
+                    <p className="text-sm font-bold text-primary">Comprehensive GI Analysis</p>
                   </div>
                 </CardContent>
               </Card>
@@ -162,7 +161,7 @@ function StatCard({ title, value, trend, icon: Icon, color, bgColor }: any) {
         </div>
         <div>
           <p className="text-xs text-muted-foreground font-medium">{title}</p>
-          <h3 className="text-2xl font-black mt-1 tracking-tight">{value}</h3>
+          <h3 className="text-2xl font-black mt-1 tracking-tight text-white">{value}</h3>
         </div>
       </CardContent>
       <div className={`h-1 w-full ${bgColor.replace('/10', '/30')}`} />
