@@ -7,19 +7,24 @@ import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { HumanBodyVisualizer } from "@/components/dashboard/human-body-visualizer"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Download, Share2, FileText, CheckCircle2, AlertTriangle, Info } from "lucide-react"
+import { ArrowLeft, Download, Share2, FileText, CheckCircle2, AlertTriangle, Info, Zap } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
 
 export default function ResultsPage() {
   const [data, setData] = useState<any>(null)
+  const [sessionId, setSessionId] = useState<string>("")
+  const [sessionTime, setSessionTime] = useState<string>("")
 
   useEffect(() => {
     const saved = localStorage.getItem('lastResult')
     if (saved) {
       setData(JSON.parse(saved))
     }
+    // Defer dynamic values to after mount to avoid hydration mismatch
+    setSessionId(`DX-${Math.floor(Math.random() * 10000)}`)
+    setSessionTime(new Date().toLocaleTimeString())
   }, [])
 
   if (!data) {
@@ -60,7 +65,9 @@ export default function ResultsPage() {
                 </Button>
                 <div>
                   <h1 className="text-2xl font-black text-white">Analysis Report</h1>
-                  <p className="text-xs text-muted-foreground">Session: {new Date().toLocaleTimeString()} • ID: DX-{Math.floor(Math.random() * 10000)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Session: {sessionTime || "Loading..."} • ID: {sessionId || "Generating..."}
+                  </p>
                 </div>
               </div>
               <div className="flex gap-2">
