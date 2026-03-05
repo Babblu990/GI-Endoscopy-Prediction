@@ -1,213 +1,30 @@
 {
   "entities": {
-    "EndoscopicImage": {
+    "Prediction": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "EndoscopicImage",
+      "title": "Prediction",
       "type": "object",
-      "description": "Represents an endoscopic image uploaded by a medical user for AI analysis.",
+      "description": "Represents a combined endoscopic image and its AI diagnostic results.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the EndoscopicImage entity."
-        },
-        "uploadedByUserId": {
-          "type": "string",
-          "description": "Reference to the unique identifier of the user who uploaded the image. (Relationship: User 1:N EndoscopicImage)"
-        },
-        "fileName": {
-          "type": "string",
-          "description": "The original name of the uploaded image file."
-        },
-        "storagePath": {
-          "type": "string",
-          "description": "The URL or path where the image is stored in the cloud storage (e.g., Firebase Storage).",
-          "format": "uri"
-        },
-        "mimeType": {
-          "type": "string",
-          "description": "The MIME type of the uploaded image file (e.g., 'image/jpeg', 'image/png')."
-        },
-        "uploadTimestamp": {
-          "type": "string",
-          "description": "The timestamp when the image was uploaded.",
-          "format": "date-time"
-        },
-        "thumbnailStoragePath": {
-          "type": "string",
-          "description": "Optional URL or path to a generated thumbnail of the image, if available.",
-          "format": "uri"
-        }
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "uploadedAt": { "type": "string", "format": "date-time" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "originalFileName": { "type": "string" },
+        "overallPrediction": { "type": "string" },
+        "overallConfidence": { "type": "number" },
+        "status": { "type": "string" }
       },
-      "required": [
-        "id",
-        "uploadedByUserId",
-        "fileName",
-        "storagePath",
-        "mimeType",
-        "uploadTimestamp"
-      ]
-    },
-    "PredictionResult": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "PredictionResult",
-      "type": "object",
-      "description": "Stores the AI diagnostic prediction results for a specific endoscopic image.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the PredictionResult entity."
-        },
-        "imageId": {
-          "type": "string",
-          "description": "Reference to the EndoscopicImage that this prediction corresponds to. (Relationship: EndoscopicImage 1:N PredictionResult)"
-        },
-        "uploadedByUserId": {
-          "type": "string",
-          "description": "Reference to the unique identifier of the user who initiated this prediction. (Relationship: User 1:N PredictionResult)"
-        },
-        "predictionTimestamp": {
-          "type": "string",
-          "description": "The timestamp when the AI prediction was generated.",
-          "format": "date-time"
-        },
-        "overallPrediction": {
-          "type": "string",
-          "description": "The final, aggregated disease prediction based on model voting (e.g., 'Polyp', 'Ulcer', 'Healthy')."
-        },
-        "overallConfidence": {
-          "type": "number",
-          "description": "The confidence score (as a percentage or decimal) for the overall prediction."
-        },
-        "status": {
-          "type": "string",
-          "description": "A textual status indicating the prediction outcome (e.g., 'Detected', 'Not Detected', 'Review Required')."
-        },
-        "modelOutputsJson": {
-          "type": "string",
-          "description": "A JSON string representing an array of objects, where each object contains an individual AI model's prediction and confidence score (e.g., [{'modelName': 'VGG16', 'prediction': 'Polyp', 'confidence': 0.72}])."
-        }
-      },
-      "required": [
-        "id",
-        "imageId",
-        "uploadedByUserId",
-        "predictionTimestamp",
-        "overallPrediction",
-        "overallConfidence",
-        "status",
-        "modelOutputsJson"
-      ]
-    },
-    "AIModel": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "AIModel",
-      "type": "object",
-      "description": "Stores metadata and performance metrics for the deep learning models used in the system.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the AIModel entity. This is typically the model's name."
-        },
-        "name": {
-          "type": "string",
-          "description": "The official name of the AI model (e.g., 'VGG16', 'ResNet50', 'InceptionV3')."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the AI model, including its architecture or purpose."
-        },
-        "accuracyBeforeTuning": {
-          "type": "number",
-          "description": "The accuracy percentage of the model before hyperparameter tuning."
-        },
-        "accuracyAfterTuning": {
-          "type": "number",
-          "description": "The accuracy percentage of the model after hyperparameter tuning."
-        },
-        "lastUpdated": {
-          "type": "string",
-          "description": "The timestamp when the model's performance metrics were last updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description",
-        "accuracyBeforeTuning",
-        "accuracyAfterTuning"
-      ]
+      "required": ["id", "userId", "uploadedAt", "imageUrl", "overallPrediction", "overallConfidence"]
     }
   },
   "auth": {
-    "providers": [
-      "password",
-      "anonymous"
-    ]
+    "providers": ["anonymous", "password"]
   },
   "firestore": {
-    "structure": [
-      {
-        "path": "/users/{userId}/endoscopicImages/{imageId}",
-        "definition": {
-          "entityName": "EndoscopicImage",
-          "schema": {
-            "$ref": "#/backend/entities/EndoscopicImage"
-          },
-          "description": "Stores endoscopic images uploaded by a specific user. The 'uploadedByUserId' field in the document must match the '{userId}' path parameter for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns and uploaded the image."
-            },
-            {
-              "name": "imageId",
-              "description": "The unique identifier for the specific endoscopic image."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/endoscopicImages/{imageId}/predictionResults/{predictionResultId}",
-        "definition": {
-          "entityName": "PredictionResult",
-          "schema": {
-            "$ref": "#/backend/entities/PredictionResult"
-          },
-          "description": "Stores AI prediction results associated with a specific endoscopic image, owned by a specific user. The 'uploadedByUserId' field in the document must match the '{userId}' path parameter for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique identifier of the user who owns the associated image and initiated the prediction."
-            },
-            {
-              "name": "imageId",
-              "description": "The unique identifier of the parent endoscopic image."
-            },
-            {
-              "name": "predictionResultId",
-              "description": "The unique identifier for this specific AI prediction result."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/aiModels/{modelId}",
-        "definition": {
-          "entityName": "AIModel",
-          "schema": {
-            "$ref": "#/backend/entities/AIModel"
-          },
-          "description": "Stores metadata and performance metrics for the deep learning models. This collection is globally readable by authenticated users and is not user-specific.",
-          "params": [
-            {
-              "name": "modelId",
-              "description": "The unique identifier for the AI model (e.g., 'VGG16')."
-            }
-          ]
-        }
-      }
-    ],
-    "reasoning": "The recommended Firestore structure prioritizes Authorization Independence and Query-Accurate Permissions (QAPs) by leveraging path-based ownership and denormalization. User-specific data, such as `EndoscopicImage` and `PredictionResult`, are nested under `/users/{userId}` paths. This design ensures that all documents within these collections share the same security posture – they are exclusively owned by the `userId` defined in the path.\n\n**Authorization Independence:**\n1.  **`/users/{userId}/endoscopicImages/{imageId}`**: Each `EndoscopicImage` document includes an `uploadedByUserId` field. This field MUST be identical to the `{userId}` wildcard in the path. This denormalization allows security rules to authorize access to an image simply by verifying that `request.auth.uid == userId`, without needing to perform a `get()` operation on a parent user document or cross-reference other collections. This ensures atomic operations and simplifies rule debugging.\n2.  **`/users/{userId}/endoscopicImages/{imageId}/predictionResults/{predictionResultId}`**: Similarly, each `PredictionResult` document contains an `uploadedByUserId` field which MUST match the `{userId}` wildcard in its hierarchical path. This critical denormalization allows rules to validate access directly against `request.auth.uid == userId`, eliminating any `get()` calls to the parent `endoscopicImage` or root `user` document for authorization. This is crucial for maintaining performance and rule simplicity.\n\n**Query-Accurate Permissions (QAPs):**\n1.  **User-owned Data (`/users/{userId}/...`)**: By nesting `EndoscopicImage` and `PredictionResult` under the user's ID, `list` operations become inherently secure and performant. A user can only query and retrieve documents from their specific `/users/{request.auth.uid}/endoscopicImages` or `/users/{request.auth.uid}/endoscopicImages/{imageId}/predictionResults` paths. The security rules can simply enforce `allow list: if request.auth.uid == userId;`, guaranteeing that no user can inadvertently or maliciously retrieve another user's private medical data. The denormalized `uploadedByUserId` within the documents further reinforces this for collection group queries, if needed.\n2.  **Global Data (`/aiModels/{modelId}`)**: The `AIModel` collection is designed as a top-level collection (`/aiModels`) with a read-only security posture for authenticated users. This segregation (Strategy B) means that all documents in this collection have the same access requirements: authenticated users can read, but not write. `list` operations are therefore inherently secure, as they are intended to display global, public model information, and rules can simply state `allow read: if request.auth.uid != null;`.\n\nThis structure adheres to structural segregation by clearly separating private, user-specific data from global, read-only data. It uses consistent naming for wildcards and denormalized fields (e.g., `uploadedByUserId`) to enhance clarity, debuggability, and enforce atomic authorization without complex `get()` calls, directly addressing the core design principles."
+    "/users/{userId}/predictions/{predictionId}": {
+      "schema": { "$ref": "#/backend/entities/Prediction" },
+      "description": "Stores diagnostic predictions for a specific user."
+    }
   }
 }

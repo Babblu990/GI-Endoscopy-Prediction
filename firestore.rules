@@ -6,28 +6,9 @@ service cloud.firestore {
      * FIREBASE SECURITY RULES DOCUMENTATION
      *
      * Core Philosophy:
-     * This ruleset implements a strict User-Ownership model designed for medical data privacy and 
-     * high-performance authorization. Access is primarily governed by the hierarchical path, 
-     * ensuring that users can only interact with data nested under their specific UID.
-     *
-     * Data Structure:
-     * 1. Private User Data: /users/{userId}/... (Endoscopic images and their related AI predictions).
-     * 2. Global Reference Data: /aiModels/{modelId} (Read-only metadata for deep learning models).
-     *
-     * Key Security Decisions:
-     * - Authorization Independence: We use denormalized ownership fields (uploadedByUserId) within 
-     *   documents to match the path wildcards. This allows for atomic permission checks without 
-     *   expensive get() calls to parent documents.
-     * - Prototyping Flexibility: While authorization is strictly enforced based on UIDs, the 
-     *   internal schema of the data (types, optional fields) is not validated to allow for 
-     *   rapid development iterations.
-     * - Destructive Operation Safety: All updates and deletes require explicit verification 
-     *   that the document exists and is owned by the requester.
-     *
-     * Denormalization for Authorization:
-     * To maintain "Query-Accurate Permissions," the `uploadedByUserId` is required on every 
-     * user-owned document. This ensures that even in Collection Group queries (if enabled), 
-     * the rules can efficiently filter and protect data.
+     * This ruleset implements a strict User-Ownership model designed for medical data privacy.
+     * Access is governed by the hierarchical path, ensuring that users can only interact with data 
+     * nested under their specific UID.
      */
 
     // --- Helper Functions ---
@@ -50,47 +31,40 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     /**
-     * @description Rules for endoscopic images uploaded by medical users.
-     * @path /users/{userId}/endoscopicImages/{imageId}
-     * @allow (create) if authenticated as {userId} and uploadedByUserId in data matches {userId}.
-     * @deny (list) if the authenticated UID does not match the {userId} in the path.
-     * @principle Enforces path-based ownership and relational integrity for uploaded content.
+     * @description Rules for diagnostic predictions.
+     * @path /users/{userId}/predictions/{predictionId}
+     */
+    match /users/{userId}/predictions/{predictionId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Legacy rules for endoscopic images (kept for backward compatibility).
      */
     match /users/{userId}/endoscopicImages/{imageId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.uploadedByUserId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.uploadedByUserId == resource.data.uploadedByUserId;
-      allow delete: if isExistingOwner(userId);
+      allow update, delete: if isExistingOwner(userId);
 
-      /**
-       * @description Rules for AI diagnostic results associated with a specific image.
-       * @path /users/{userId}/endoscopicImages/{imageId}/predictionResults/{predictionResultId}
-       * @allow (get) if authenticated as the {userId} who owns the parent image.
-       * @deny (update) if attempting to change the uploadedByUserId field.
-       * @principle Hierarchical ownership with immutable relational links.
-       */
       match /predictionResults/{predictionResultId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && request.resource.data.uploadedByUserId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.uploadedByUserId == resource.data.uploadedByUserId;
-        allow delete: if isExistingOwner(userId);
+        allow update, delete: if isExistingOwner(userId);
       }
     }
 
     /**
-     * @description Rules for global AI model metadata and performance metrics.
-     * @path /aiModels/{modelId}
-     * @allow (list) for any authenticated user to view available models.
-     * @deny (create) for standard users; global models are managed by system administrators.
-     * @principle Public read access for authenticated users with restricted write access.
+     * @description Rules for global AI model metadata.
      */
     match /aiModels/{modelId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if false; // System models are managed via Admin SDK/Console only.
+      allow create, update, delete: if false;
     }
 
     // --- Default Deny ---
-    // Explicitly deny access to any other paths or unhandled operations.
     match /{path=**} {
       allow read, write: if false;
     }
