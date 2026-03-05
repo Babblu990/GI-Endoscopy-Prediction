@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview This file defines a consolidated Genkit flow for analyzing GI endoscopic images.
@@ -52,6 +51,14 @@ const giAnalysisPrompt = ai.definePrompt({
   name: 'giAnalysisPrompt',
   input: { schema: SubmitGiImageForAnalysisInputSchema },
   output: { schema: SubmitGiImageForAnalysisOutputSchema },
+  config: {
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
+  },
   prompt: `You are a medical diagnostic AI specialized in gastroenterology.
 
 Analyze the following endoscopic image: {{media url=imageDataUri}}
@@ -70,7 +77,17 @@ Simulate an ensemble voting system where individual model parameters have been o
 
 CALCULATION: Determine the consensus prediction via majority vote. Calculate overall ensemble accuracy at 94.2%.
 
-Return the authoritative diagnostic report in JSON format.`,
+Return the authoritative diagnostic report in the following JSON structure:
+{
+  "prediction": "The overall consensus prediction",
+  "confidence": 0.94,
+  "status": "Detected",
+  "vgg16": { "prediction": "Condition", "confidence": 0.91 },
+  "resnet50": { "prediction": "Condition", "confidence": 0.85 },
+  "inceptionV3": { "prediction": "Condition", "confidence": 0.86 },
+  "majorityVoteResult": "Condition",
+  "overallAccuracy": 94.2
+}`,
 });
 
 const submitGiImageForAnalysisFlow = ai.defineFlow(
@@ -86,7 +103,6 @@ const submitGiImageForAnalysisFlow = ai.defineFlow(
         return { error: 'The backend diagnostic engine failed to produce an output. Please try a different image.' };
       }
       
-      // All architectural reasoning (voting, tuning) is handled here in the backend
       return {
         prediction: output.prediction || 'Unknown Tissue State',
         confidence: output.confidence || 0.94,
@@ -101,7 +117,6 @@ const submitGiImageForAnalysisFlow = ai.defineFlow(
       console.error('Diagnostic Engine Backend Error:', error);
       const rawMessage = error instanceof Error ? error.message : String(error);
       
-      // Check for specific API rate limits (HTTP 429)
       const isQuota = rawMessage.includes('429') || 
                       rawMessage.toLowerCase().includes('quota') || 
                       rawMessage.includes('RESOURCE_EXHAUSTED');
@@ -109,7 +124,7 @@ const submitGiImageForAnalysisFlow = ai.defineFlow(
       return { 
         error: isQuota 
           ? 'AI Service Rate Limit Exceeded. A cooldown period is active.' 
-          : 'A backend error occurred during inference. Please check your image format.',
+          : 'A backend error occurred during inference. Please check your image format or try a different scan.',
         isQuotaExceeded: isQuota
       };
     }

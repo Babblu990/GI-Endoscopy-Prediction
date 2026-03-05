@@ -37,7 +37,6 @@ function RelativeTime({ dateString }: { dateString: string }) {
 export default function DashboardPage() {
   const { user, firestore } = useFirebase()
 
-  // Recent 5 reports for the feed
   const recentQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null
     return query(
@@ -47,7 +46,6 @@ export default function DashboardPage() {
     )
   }, [firestore, user])
 
-  // All reports for counts
   const allReportsQuery = useMemoFirebase(() => {
     if (!firestore || !user) return null
     return collection(firestore, 'users', user.uid, 'predictions')
@@ -67,7 +65,6 @@ export default function DashboardPage() {
         <main className="p-4 md:p-6 overflow-y-auto">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             
-            {/* Left Stats Section */}
             <div className="lg:col-span-8 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <StatCard 
@@ -177,7 +174,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Right Interactive Section */}
             <div className="lg:col-span-4 space-y-6">
               <Card className="glass-card h-full flex flex-col overflow-hidden min-h-[500px]">
                 <CardHeader className="pb-0">
