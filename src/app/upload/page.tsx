@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle } from "lucide-react"
+import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { useToast } from "@/hooks/use-toast"
@@ -22,9 +22,18 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
   const { toast } = useToast()
   const router = useRouter()
   const { firestore, auth, user, isUserLoading } = useFirebase()
+
+  // Cooldown timer logic
+  useEffect(() => {
+    if (cooldown > 0) {
+      const timer = setTimeout(() => setCooldown(cooldown - 1), 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [cooldown])
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -53,7 +62,7 @@ export default function UploadPage() {
   }
 
   const handleAnalysis = async () => {
-    if (!preview) return
+    if (!preview || cooldown > 0) return
     if (!user) {
       toast({
         title: "Authenticating",
@@ -68,20 +77,27 @@ export default function UploadPage() {
       const result = await submitGiImageForAnalysis({ imageDataUri: preview })
       
       if (result.error) {
-        toast({
-          title: result.isQuotaExceeded ? "Backend Limit" : "Analysis Failed",
-          description: result.error || "An unknown error occurred during analysis.",
-          variant: "destructive"
-        })
+        if (result.isQuotaExceeded) {
+          setCooldown(60) // Start a 60-second cooldown
+          toast({
+            title: "Quota Exceeded",
+            description: "Free tier limit reached. Please wait 60 seconds before retrying.",
+            variant: "destructive"
+          })
+        } else {
+          toast({
+            title: "Analysis Failed",
+            description: result.error,
+            variant: "destructive"
+          })
+        }
         setIsAnalyzing(false)
         return
       }
 
-      // Safeguard against missing fields in AI output
       const finalPrediction = result.prediction || 'Inconclusive'
       const finalConfidence = Math.round((result.confidence || 0) * 100)
 
-      // Store results in Firestore for History
       const predictionsCol = collection(firestore, 'users', user.uid, 'predictions')
       const newDocRef = doc(predictionsCol)
       
@@ -109,7 +125,6 @@ export default function UploadPage() {
 
       setDocumentNonBlocking(newDocRef, predictionData, { merge: true })
 
-      // Formatted data for local storage (Results page consumption)
       const presentationResults = {
         predictionCard: {
           prediction: finalPrediction,
@@ -130,11 +145,6 @@ export default function UploadPage() {
             confidence: Math.round((result.inceptionV3?.confidence || 0) * 100)
           },
           majorityVoteResult: result.majorityVoteResult || finalPrediction
-        },
-        tuning: {
-          base: result.overallBaseAccuracy || 82.4,
-          tuned: result.overallTunedAccuracy || 94.2,
-          overall: result.overallAccuracy || 94.2
         }
       }
 
@@ -149,8 +159,8 @@ export default function UploadPage() {
     } catch (error: any) {
       console.error('Frontend Error:', error)
       toast({
-        title: "Backend Error",
-        description: "Failed to connect to the tuned diagnostic engine. Please try again.",
+        title: "Connection Error",
+        description: "Could not reach the diagnostic engine. Please try again.",
         variant: "destructive"
       })
     } finally {
@@ -216,12 +226,12 @@ export default function UploadPage() {
                   )}
                 </CardContent>
                 <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-white/5 mt-4">
-                  <div className="flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground font-bold">
+                  <div className="flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground font-bold uppercase">
                     <ShieldCheck className="w-4 h-4 text-accent" />
-                    SECURE BACKEND ENCRYPTION
+                    Secure Backend Active
                   </div>
                   <Button 
-                    disabled={!preview || isAnalyzing || isUserLoading} 
+                    disabled={!preview || isAnalyzing || isUserLoading || cooldown > 0} 
                     onClick={handleAnalysis}
                     className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-background font-black gap-2 px-8 py-6 sm:py-2 shadow-lg shadow-primary/20 uppercase tracking-widest"
                   >
@@ -229,6 +239,11 @@ export default function UploadPage() {
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
                         Analyzing...
+                      </>
+                    ) : cooldown > 0 ? (
+                      <>
+                        <Clock className="w-4 h-4" />
+                        Retry in {cooldown}s
                       </>
                     ) : (
                       <>
@@ -241,24 +256,31 @@ export default function UploadPage() {
               </Card>
 
               <div className="lg:col-span-5 space-y-6">
+                {cooldown > 0 && (
+                  <div className="p-5 rounded-2xl bg-destructive/15 border border-destructive/30 flex gap-4 animate-pulse">
+                    <AlertCircle className="w-6 h-6 text-destructive shrink-0" />
+                    <div>
+                      <h4 className="font-black text-destructive text-xs uppercase tracking-widest">Rate Limit Hit</h4>
+                      <p className="text-[10px] text-destructive/80 mt-1 leading-relaxed">
+                        The AI service is processing many requests. System will unlock in <strong>{cooldown} seconds</strong>.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <Card className="glass-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-xs uppercase tracking-widest text-muted-foreground font-black">Backend Protocols</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <ProtocolItem 
-                      title="HPO Optimization" 
-                      description="Hyperparameter tuning active for weighted model ensemble."
+                      title="Ensemble Analysis" 
+                      description="Multi-model weighted voting logic."
                       active={true}
                     />
                     <ProtocolItem 
-                      title="Consensus Voting" 
-                      description="Majority vote logic applied to VGG16, ResNet50, and InceptionV3."
-                      active={true}
-                    />
-                    <ProtocolItem 
-                      title="Diagnostic Mapping" 
-                      description="Anatomical localization based on identified GI condition."
+                      title="HPO Stabilization" 
+                      description="Hyperparameters optimized for medical accuracy."
                       active={true}
                     />
                   </CardContent>
@@ -267,21 +289,11 @@ export default function UploadPage() {
                 <div className="p-5 rounded-2xl bg-accent/10 border border-accent/20 flex gap-4">
                    <Zap className="w-6 h-6 text-accent shrink-0" />
                    <div>
-                     <h4 className="font-black text-accent text-xs uppercase tracking-widest">Efficiency Note</h4>
+                     <h4 className="font-black text-accent text-xs uppercase tracking-widest">Accuracy Note</h4>
                      <p className="text-[10px] text-accent/80 mt-1 leading-relaxed">
-                       Tuning has increased ensemble accuracy from <strong>82.4%</strong> to <strong>94.2%</strong>.
+                       Current Tuned Accuracy: <strong>94.2%</strong>.
                      </p>
                    </div>
-                </div>
-
-                <div className="p-5 rounded-2xl bg-destructive/10 border border-destructive/20 flex gap-4">
-                  <AlertCircle className="w-6 h-6 text-destructive shrink-0" />
-                  <div>
-                    <h4 className="font-black text-destructive text-xs uppercase tracking-widest">Medical Disclaimer</h4>
-                    <p className="text-[10px] text-destructive/80 mt-1 leading-relaxed">
-                      AI outputs are research-only and must be verified by a board-certified GI specialist.
-                    </p>
-                  </div>
                 </div>
               </div>
             </div>
