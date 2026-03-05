@@ -7,7 +7,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock } from "lucide-react"
+import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock, Settings } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { useToast } from "@/hooks/use-toast"
@@ -24,6 +24,7 @@ export default function UploadPage() {
   const [preview, setPreview] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [cooldown, setCooldown] = useState(0)
+  const [authError, setAuthError] = useState<string | null>(null)
   const { toast } = useToast()
   const router = useRouter()
   const { firestore, auth, user, isUserLoading } = useFirebase()
@@ -40,9 +41,13 @@ export default function UploadPage() {
   useEffect(() => {
     if (!isUserLoading && !user && auth) {
       try {
-        initiateAnonymousSignIn(auth)
-      } catch (e) {
-        console.error("Auth initialization failed. Ensure Identity Toolkit API is enabled.", e)
+        initiateAnonymousSignIn(auth);
+        setAuthError(null);
+      } catch (e: any) {
+        console.error("Auth initialization failed:", e);
+        if (e.message?.includes('blocked')) {
+          setAuthError("Anonymous sign-in is disabled in your Firebase Console.");
+        }
       }
     }
   }, [user, isUserLoading, auth])
@@ -73,11 +78,10 @@ export default function UploadPage() {
     // Safety check for user auth
     if (!user) {
       toast({
-        title: "Authentication Required",
-        description: "Please ensure Authentication is enabled in your Firebase Console.",
+        title: "Configuration Required",
+        description: "Please enable Anonymous sign-in in your Firebase Console to save results.",
         variant: "destructive"
       })
-      if (auth) initiateAnonymousSignIn(auth)
       return
     }
 
@@ -211,7 +215,7 @@ export default function UploadPage() {
                 <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-white/5 mt-4">
                   <div className="flex items-center gap-2 text-[10px] md:text-xs text-muted-foreground font-bold uppercase">
                     <ShieldCheck className={`w-4 h-4 ${user ? 'text-accent' : 'text-destructive'}`} />
-                    {isUserLoading ? "Initializing session..." : !user ? "Auth API Disabled" : "Secure Session Active"}
+                    {isUserLoading ? "Initializing session..." : !user ? "Configuration Required" : "Secure Session Active"}
                   </div>
                   <Button 
                     disabled={isButtonDisabled} 
@@ -234,7 +238,7 @@ export default function UploadPage() {
                         Initializing...
                       </>
                     ) : !user ? (
-                      "Enable Auth to Start"
+                      "Auth Required"
                     ) : (
                       <>
                         <Zap className="w-4 h-4" />
@@ -246,14 +250,21 @@ export default function UploadPage() {
               </Card>
 
               <div className="lg:col-span-5 space-y-6">
-                {!user && !isUserLoading && (
-                  <div className="p-5 rounded-2xl bg-destructive/15 border border-destructive/30 flex gap-4">
+                {(!user && !isUserLoading) && (
+                  <div className="p-5 rounded-2xl bg-destructive/15 border border-destructive/30 flex gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
                     <AlertCircle className="w-6 h-6 text-destructive shrink-0" />
                     <div>
-                      <h4 className="font-black text-destructive text-xs uppercase tracking-widest leading-none">Configuration Required</h4>
-                      <p className="text-[10px] text-destructive/80 mt-1.5 leading-relaxed font-medium">
-                        Firebase Authentication is not yet enabled. Please visit your Firebase Console to enable <strong>Anonymous</strong> sign-in and activate the <strong>Identity Toolkit API</strong>.
+                      <h4 className="font-black text-destructive text-xs uppercase tracking-widest leading-none">Enable Anonymous Auth</h4>
+                      <p className="text-[10px] text-destructive/80 mt-2 leading-relaxed font-medium">
+                        Your project's <strong>Anonymous sign-in</strong> provider is currently disabled. 
+                        <br /><br />
+                        Please visit the <strong>Authentication</strong> tab in your Firebase Console and enable <strong>Anonymous</strong> under Sign-in providers.
                       </p>
+                      <Button variant="link" className="text-destructive p-0 h-auto text-[10px] font-bold mt-2 gap-1" asChild>
+                        <a href="https://console.firebase.google.com/project/_/authentication/providers" target="_blank" rel="noopener noreferrer">
+                          Open Firebase Console <Settings className="w-3 h-3" />
+                        </a>
+                      </Button>
                     </div>
                   </div>
                 )}
