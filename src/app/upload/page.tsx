@@ -7,7 +7,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock, ExternalLink } from "lucide-react"
+import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { useToast } from "@/hooks/use-toast"
@@ -24,7 +24,6 @@ export default function UploadPage() {
   const [preview, setPreview] = useState<string | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [cooldown, setCooldown] = useState(0)
-  const [localAuthError, setLocalAuthError] = useState<string | null>(null)
   const { toast } = useToast()
   const router = useRouter()
   const { firestore, auth, user, isUserLoading, userError } = useFirebase()
@@ -40,9 +39,7 @@ export default function UploadPage() {
   // Ensure user is signed in anonymously on mount
   useEffect(() => {
     if (!isUserLoading && !user && auth) {
-      initiateAnonymousSignIn(auth, (err) => {
-        setLocalAuthError(err?.message || String(err));
-      });
+      initiateAnonymousSignIn(auth);
     }
   }, [user, isUserLoading, auth])
 
@@ -72,7 +69,7 @@ export default function UploadPage() {
     if (!user) {
       toast({
         title: "Session Error",
-        description: "Authentication is required to run diagnostics.",
+        description: "Establishing secure connection. Please try again in a moment.",
         variant: "destructive"
       })
       return
@@ -145,10 +142,6 @@ export default function UploadPage() {
     }
   }
 
-  // Detect if auth is blocked by project configuration
-  const combinedError = userError?.message || localAuthError || "";
-  const isAuthBlocked = combinedError.includes('signup-are-blocked') || combinedError.includes('identity-toolkit');
-
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -161,29 +154,10 @@ export default function UploadPage() {
               <p className="text-sm text-muted-foreground mt-1">Upload high-res GI scans for ensemble analysis.</p>
             </div>
 
-            {isAuthBlocked && (
-              <div className="p-6 rounded-3xl bg-destructive/10 border border-destructive/20 animate-in fade-in slide-in-from-top-4 duration-500 shadow-2xl">
-                <div className="flex gap-4">
-                  <div className="p-2 bg-destructive/20 rounded-xl h-fit">
-                    <AlertCircle className="w-6 h-6 text-destructive" />
-                  </div>
-                  <div className="space-y-3">
-                    <h4 className="font-black text-destructive text-sm uppercase tracking-widest leading-none">Authentication Service Blocked</h4>
-                    <p className="text-xs text-destructive/90 leading-relaxed font-medium">
-                      Firebase reports that anonymous sign-up is blocked. You must manually enable it in your console to run diagnostics:
-                    </p>
-                    <ol className="text-xs text-destructive/80 space-y-2 list-decimal list-inside font-medium">
-                      <li>Visit the <strong>Authentication &gt; Sign-in method</strong> tab.</li>
-                      <li>Enable the <strong>Anonymous</strong> provider.</li>
-                      <li>Ensure the <strong>Identity Toolkit API</strong> is enabled in Google Cloud.</li>
-                    </ol>
-                    <Button variant="outline" size="sm" className="border-destructive/20 text-destructive bg-destructive/5 hover:bg-destructive hover:text-white transition-colors gap-2 mt-2 h-9 px-4 font-bold uppercase text-[10px]" asChild>
-                      <a href="https://console.firebase.google.com/project/_/authentication/providers" target="_blank" rel="noopener noreferrer">
-                        Fix in Firebase Console <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </Button>
-                  </div>
-                </div>
+            {userError && (
+              <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex gap-3 shadow-xl">
+                <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+                <p className="text-xs text-destructive font-medium">{userError.message}</p>
               </div>
             )}
 
@@ -231,7 +205,7 @@ export default function UploadPage() {
                 <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 py-6 px-8 border-t border-white/5 mt-4 bg-secondary/10">
                   <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground font-black uppercase tracking-[0.15em]">
                     <ShieldCheck className={`w-4 h-4 ${user ? 'text-accent' : 'text-destructive'}`} />
-                    {isUserLoading ? "Initializing..." : !user ? "Auth Required" : "Secure Session: Active"}
+                    {isUserLoading ? "Initializing..." : !user ? "Connecting..." : "Secure Session: Active"}
                   </div>
                   <Button 
                     disabled={!preview || isAnalyzing || isUserLoading || !user || cooldown > 0} 
