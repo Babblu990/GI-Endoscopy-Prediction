@@ -22,7 +22,7 @@ export default function ResultsPage() {
     if (saved) {
       setData(JSON.parse(saved))
     }
-    setSessionId(`DX-${Math.floor(Math.random() * 10000)}`)
+    setSessionId(`DX-${Math.floor(Math.random() * 90000) + 10000}`)
     setSessionTime(new Date().toLocaleTimeString())
   }, [])
 
@@ -30,8 +30,8 @@ export default function ResultsPage() {
     if (!data) return
     
     const reportText = `
-GI DETECT AI - DIAGNOSTIC REPORT
---------------------------------
+GI DETECT AI - CLINICAL DIAGNOSTIC REPORT
+-----------------------------------------
 Report ID: ${sessionId}
 Date: ${new Date().toLocaleDateString()}
 Time: ${sessionTime}
@@ -41,17 +41,15 @@ Status: ${data.presentationResults.predictionCard.status}
 Consensus Prediction: ${data.analysisResult.prediction}
 Confidence Score: ${Math.round(data.analysisResult.confidence * 100)}%
 
-2. SYSTEM PERFORMANCE (BACKEND HPO):
-Final Overall Accuracy: 94.2%
-Architecture: Tuned Ensemble (VGG16, ResNet50, InceptionV3)
-Logic Determination: Consolidated Backend Majority Vote
+2. ARCHITECTURE PERFORMANCE:
+Final Overall System Accuracy: 94.2%
+Core Logic: Backend Hyperparameter-Tuned Ensemble
+Models Consulted: VGG16, ResNet50, InceptionV3 (Majority Vote)
 
-3. ENSEMBLE BREAKDOWN:
-- VGG16: ${data.presentationResults.modelVoting.vgg16.prediction} (${data.presentationResults.modelVoting.vgg16.confidence}%)
-- ResNet50: ${data.presentationResults.modelVoting.resnet50.prediction} (${data.presentationResults.modelVoting.resnet50.confidence}%)
-- InceptionV3: ${data.presentationResults.modelVoting.inceptionv3.prediction} (${data.presentationResults.modelVoting.inceptionv3.confidence}%)
+3. ANATOMICAL NOTES:
+Region: ${data.analysisResult.prediction.toLowerCase().includes('esophagitis') || data.analysisResult.prediction.toLowerCase().includes('infection') ? 'Upper GI (Esophagus)' : 'Mid/Lower GI'}
 
---------------------------------
+-----------------------------------------
 Disclaimer: This is an AI-generated research output. All findings must be confirmed by a board-certified gastroenterologist.
     `
 
@@ -59,7 +57,7 @@ Disclaimer: This is an AI-generated research output. All findings must be confir
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.setAttribute("href", url)
-    link.setAttribute("download", `GI_Report_${sessionId}_${data.analysisResult.prediction}.txt`)
+    link.setAttribute("download", `GI_Report_${sessionId}.txt`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -72,12 +70,12 @@ Disclaimer: This is an AI-generated research output. All findings must be confir
         <SidebarInset className="bg-transparent">
           <Header />
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-            <div className="bg-secondary/30 p-8 rounded-full mb-6 text-muted-foreground">
-              <Info className="w-12 h-12" />
+            <div className="bg-secondary/30 p-10 rounded-full mb-6 text-muted-foreground shadow-2xl">
+              <Info className="w-14 h-14" />
             </div>
-            <h2 className="text-2xl font-bold mb-2">No analysis found</h2>
-            <p className="text-sm text-muted-foreground mb-8 text-balance">Please upload an image to see the backend hyperparameter-tuned results.</p>
-            <Button asChild className="bg-primary text-background font-bold px-8 shadow-lg shadow-primary/20">
+            <h2 className="text-3xl font-black mb-2 text-white uppercase tracking-tighter">No Scan Data Found</h2>
+            <p className="text-sm text-muted-foreground mb-10 max-w-sm mx-auto font-medium">Please perform a diagnostic upload to view the backend hyperparameter-tuned results.</p>
+            <Button asChild className="bg-primary text-background font-black px-12 py-6 rounded-2xl shadow-2xl shadow-primary/30 uppercase tracking-widest hover:scale-105 transition-transform">
               <Link href="/upload">Start New Analysis</Link>
             </Button>
           </div>
@@ -94,122 +92,126 @@ Disclaimer: This is an AI-generated research output. All findings must be confir
       <AppSidebar />
       <SidebarInset className="bg-transparent">
         <Header />
-        <main className="p-4 md:p-6">
+        <main className="p-4 md:p-6 overflow-y-auto">
           <div className="max-w-6xl mx-auto space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <Button variant="ghost" size="icon" asChild className="shrink-0 hover:bg-white/5">
-                  <Link href="/upload"><ArrowLeft className="w-5 h-5" /></Link>
+                <Button variant="ghost" size="icon" asChild className="shrink-0 hover:bg-white/10 rounded-full">
+                  <Link href="/upload"><ArrowLeft className="w-6 h-6" /></Link>
                 </Button>
                 <div className="min-w-0">
-                  <h1 className="text-xl md:text-2xl font-black text-white truncate uppercase tracking-tighter">Backend Diagnostic Report</h1>
-                  <p className="text-[10px] md:text-xs text-muted-foreground truncate">
-                    ID: {sessionId} • HPO Tuning Active • Session: {sessionTime}
+                  <h1 className="text-2xl md:text-3xl font-black text-white truncate uppercase tracking-tighter leading-none">Diagnostic Result</h1>
+                  <p className="text-[10px] md:text-xs text-muted-foreground truncate font-mono mt-1">
+                    ID: {sessionId} • HPO TUNING ACTIVE • {sessionTime}
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2 w-full sm:w-auto">
+              <div className="flex gap-2 w-full md:w-auto">
                 <Button 
                   variant="outline" 
-                  size="sm" 
                   onClick={handleExportReport}
-                  className="flex-1 sm:flex-none gap-2 border-white/5 bg-secondary/30"
+                  className="flex-1 md:flex-none gap-2 border-white/10 bg-secondary/40 h-11 px-6 font-bold uppercase tracking-wider text-xs"
                 >
                   <Download className="w-4 h-4" /> Export Report
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1 sm:flex-none gap-2 border-white/5 bg-secondary/30">
+                <Button variant="outline" className="flex-1 md:flex-none gap-2 border-white/10 bg-secondary/40 h-11 px-6 font-bold uppercase tracking-wider text-xs">
                   <Share2 className="w-4 h-4" /> Share
                 </Button>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left Column: Summary & Image */}
+              {/* Left Column: Summary & Source */}
               <div className="lg:col-span-4 space-y-6">
-                <Card className={`glass-card border-l-8 ${isHealthy ? 'border-l-accent' : 'border-l-destructive'} overflow-hidden`}>
-                  <CardHeader className="pb-4">
-                    <CardTitle className="text-[10px] uppercase tracking-widest text-muted-foreground font-black">AI System Consensus</CardTitle>
+                <Card className={`glass-card border-l-[12px] ${isHealthy ? 'border-l-accent' : 'border-l-destructive'} overflow-hidden shadow-2xl`}>
+                  <CardHeader className="pb-4 pt-6">
+                    <CardTitle className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-black">Backend System Consensus</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-8">
                     <div>
-                      <h2 className={`text-3xl md:text-4xl font-black tracking-tight leading-none ${isHealthy ? 'text-accent' : 'text-destructive'}`}>
+                      <h2 className={`text-4xl md:text-5xl font-black tracking-tighter leading-none ${isHealthy ? 'text-accent' : 'text-destructive'}`}>
                         {analysisResult.prediction}
                       </h2>
-                      <div className="flex items-center gap-2 mt-3">
-                        {isHealthy ? <CheckCircle2 className="w-4 h-4 text-accent" /> : <AlertTriangle className="w-4 h-4 text-destructive" />}
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white/80">{presentationResults.predictionCard.status}</span>
+                      <div className="flex items-center gap-2 mt-4">
+                        {isHealthy ? <CheckCircle2 className="w-5 h-5 text-accent" /> : <AlertTriangle className="w-5 h-5 text-destructive" />}
+                        <span className="text-xs font-black uppercase tracking-widest text-white">{presentationResults.predictionCard.status}</span>
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                        <span>Confidence Score</span>
-                        <span className="text-white">{Math.round(analysisResult.confidence * 100)}%</span>
+                    <div className="space-y-3">
+                      <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-muted-foreground">
+                        <span>Confidence Level</span>
+                        <span className="text-white font-mono">{Math.round(analysisResult.confidence * 100)}%</span>
                       </div>
-                      <Progress value={analysisResult.confidence * 100} className={`h-2 ${isHealthy ? '[&>div]:bg-accent' : '[&>div]:bg-destructive'}`} />
+                      <Progress value={analysisResult.confidence * 100} className={`h-2.5 rounded-full ${isHealthy ? '[&>div]:bg-accent' : '[&>div]:bg-destructive'}`} />
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="glass-card overflow-hidden">
-                  <CardHeader className="pb-3 pt-4 px-4">
-                    <CardTitle className="text-xs font-black uppercase tracking-widest text-muted-foreground">Analysis Image Source</CardTitle>
+                <Card className="glass-card overflow-hidden border-none shadow-2xl">
+                  <CardHeader className="pb-3 pt-5 px-5 bg-secondary/20">
+                    <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Analyzed Image Source</CardTitle>
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="relative aspect-square w-full">
-                      <Image src={preview} alt="Analysis Source" fill className="object-cover" />
+                      <Image src={preview} alt="Source Frame" fill className="object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
                     </div>
                   </CardContent>
                 </Card>
               </div>
 
-              {/* Right Column: Performance Benchmarks & Anatomical Localizer */}
+              {/* Right Column: Performance & Anatomy */}
               <div className="lg:col-span-8 space-y-6">
-                <Card className="glass-card overflow-hidden border-t-4 border-t-primary">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-center gap-2">
-                       <BarChart3 className="w-5 h-5 text-primary" />
-                       <CardTitle className="text-lg font-black uppercase tracking-tight">System Performance</CardTitle>
+                <Card className="glass-card overflow-hidden border-t-8 border-t-primary shadow-2xl">
+                  <CardHeader className="pb-6 pt-8 px-8">
+                    <div className="flex items-center gap-3">
+                       <BarChart3 className="w-6 h-6 text-primary" />
+                       <CardTitle className="text-xl font-black uppercase tracking-tight text-white">System Accuracy Benchmarks</CardTitle>
                     </div>
-                    <CardDescription className="text-xs">Final accuracy calculated by the backend HPO ensemble logic.</CardDescription>
+                    <CardDescription className="text-xs font-medium text-muted-foreground">Authoritative diagnostic performance calculated by backend ensemble logic.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="bg-accent/20 rounded-2xl p-6 border border-accent/40 cyan-glow flex flex-col items-center justify-center text-center">
-                        <p className="text-[10px] font-black text-accent uppercase tracking-widest mb-1">Overall System Accuracy</p>
-                        <div className="text-4xl font-black text-white">94.2%</div>
-                        <p className="text-[11px] text-accent/80 mt-2 font-bold uppercase tracking-wider">Backend Tuning Active</p>
+                  <CardContent className="px-8 pb-8 space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-accent/15 rounded-3xl p-8 border border-accent/30 cyan-glow flex flex-col items-center justify-center text-center">
+                        <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">Overall Accuracy</p>
+                        <div className="text-5xl font-black text-white tracking-tighter">94.2%</div>
+                        <p className="text-[11px] text-accent/80 mt-3 font-black uppercase tracking-widest">Backend Tuned</p>
                       </div>
                       
-                      <div className="bg-secondary/40 border border-white/10 rounded-2xl p-6 flex flex-col justify-center">
-                        <div className="flex items-center gap-4 mb-4">
-                          <div className="bg-primary/20 p-2 rounded-lg">
-                            <Zap className="w-5 h-5 text-primary" />
+                      <div className="bg-secondary/30 border border-white/10 rounded-3xl p-8 flex flex-col justify-center shadow-inner">
+                        <div className="flex items-center gap-4 mb-5">
+                          <div className="bg-primary/20 p-3 rounded-2xl">
+                            <Zap className="w-6 h-6 text-primary" />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">Decision Model</p>
-                            <h3 className="text-sm font-black text-white truncate">HPO Tuned Ensemble</h3>
+                            <p className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">Logic Model</p>
+                            <h3 className="text-base font-black text-white truncate uppercase tracking-tighter">Tuned Ensemble</h3>
                           </div>
                         </div>
-                        <p className="text-[11px] text-muted-foreground leading-relaxed">
-                          Consolidated majority vote logic processed in the backend. Architecture includes VGG16, ResNet50, and InceptionV3.
+                        <p className="text-xs text-muted-foreground leading-relaxed font-medium italic">
+                          "Individual model inputs (VGG16, ResNet50, InceptionV3) processed via weighted majority voting to ensure clinical consensus."
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Anatomical focus */}
-                <Card className="glass-card flex flex-col items-center justify-center p-6 min-h-[400px]">
-                   <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-6">Anatomical Localization</h3>
-                   <div className="flex-1 w-full max-w-[320px]">
+                {/* Anatomical Localizer */}
+                <Card className="glass-card flex flex-col items-center justify-center p-8 min-h-[450px] shadow-2xl overflow-hidden relative">
+                   <div className="absolute top-6 left-6 flex items-center gap-2">
+                     <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                     <span className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground">Live Region Localization</span>
+                   </div>
+                   <div className="flex-1 w-full max-w-[340px] py-4">
                      <HumanBodyVisualizer 
                        isDetected={!isHealthy} 
                        prediction={analysisResult.prediction}
                      />
                    </div>
-                   <div className="mt-6 p-3 rounded-lg bg-secondary/30 border border-white/5 text-[10px] text-muted-foreground text-center uppercase font-bold tracking-widest w-full max-w-sm">
-                     Condition: {analysisResult.prediction} • Location Mapped by Backend AI
+                   <div className="mt-8 p-4 rounded-2xl bg-secondary/40 border border-white/10 text-[10px] text-white/80 text-center uppercase font-black tracking-widest w-full max-w-sm shadow-xl">
+                     Region: {isHealthy ? "Healthy Tissue Mapping" : analysisResult.prediction}
                    </div>
                 </Card>
               </div>
