@@ -10,10 +10,15 @@ interface HumanBodyVisualizerProps {
 }
 
 export function HumanBodyVisualizer({ isDetected, prediction, className }: HumanBodyVisualizerProps) {
-  const isInfection = prediction?.toLowerCase().includes('infection');
-  const isLowerGI = prediction?.toLowerCase().includes('polyp') || 
-                    prediction?.toLowerCase().includes('ulcer') || 
-                    prediction?.toLowerCase().includes('tumor');
+  const normalizedPrediction = prediction?.toLowerCase() || '';
+  
+  // Mapping conditions to anatomical regions
+  const isUpperGI = normalizedPrediction.includes('esophagitis') || 
+                    normalizedPrediction.includes('infection');
+                    
+  const isLowerGI = normalizedPrediction.includes('polyp') || 
+                    normalizedPrediction.includes('ulcer') || 
+                    normalizedPrediction.includes('tumor');
 
   return (
     <div className={cn("relative w-full h-full flex items-center justify-center p-8", className)}>
@@ -36,12 +41,12 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
 
         {/* GI Tract Highlight Regions */}
         <g>
-          {/* Esophagus/Upper GI area - Active on Infection */}
+          {/* Esophagus/Upper GI area - Active on Esophagitis or Infection */}
           <path
             d="M95 120C95 120 85 140 85 160C85 180 100 190 115 180C130 170 120 140 120 140"
             className={cn(
               "stroke-primary/20 transition-all duration-700", 
-              isDetected && isInfection ? "stroke-accent fill-accent/20 opacity-100" : "opacity-40"
+              isDetected && isUpperGI ? "stroke-accent fill-accent/20 opacity-100" : "opacity-40"
             )}
             strokeWidth="8"
             strokeLinecap="round"
@@ -52,17 +57,27 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
             d="M85 190C85 190 70 210 85 230C100 250 120 230 135 250C150 270 130 290 130 290"
             className={cn(
               "stroke-primary/20 transition-all duration-700", 
-              isDetected && (isLowerGI || !isInfection) ? "stroke-accent fill-accent/20 opacity-100" : "opacity-40"
+              isDetected && isLowerGI ? "stroke-accent fill-accent/20 opacity-100" : "opacity-40"
             )}
             strokeWidth="8"
             strokeLinecap="round"
           />
           
+          {/* Default highlight if detected but not mapped specifically */}
+          {isDetected && !isUpperGI && !isLowerGI && (
+            <path
+              d="M100 180 Q 100 240 100 300"
+              className="stroke-accent/50 opacity-100"
+              strokeWidth="8"
+              strokeLinecap="round"
+            />
+          )}
+
           {/* Pulse effect if detected */}
           {isDetected && (
             <circle 
               cx="100" 
-              cy={isInfection ? "140" : "240"} 
+              cy={isUpperGI ? "140" : "240"} 
               r="30" 
               className="fill-accent/30 animate-ping" 
             />
@@ -73,7 +88,7 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
       {isDetected && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center pointer-events-none">
           <div className="bg-accent/20 text-accent border border-accent/50 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider animate-pulse shadow-[0_0_15px_rgba(56,163,117,0.4)]">
-            {isInfection ? "Upper GI Anomaly" : "Lower GI Anomaly"}
+            {isUpperGI ? "Upper GI Anomaly" : isLowerGI ? "Lower GI Anomaly" : "Anomaly Detected"}
           </div>
         </div>
       )}

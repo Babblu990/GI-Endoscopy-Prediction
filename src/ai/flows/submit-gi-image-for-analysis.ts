@@ -22,7 +22,7 @@ const SubmitGiImageForAnalysisInputSchema = z.object({
 export type SubmitGiImageForAnalysisInput = z.infer<typeof SubmitGiImageForAnalysisInputSchema>;
 
 const SubmitGiImageForAnalysisOutputSchema = z.object({
-  prediction: z.string().describe('The overall predicted disease or condition (e.g., Healthy, Polyp, Ulcer).'),
+  prediction: z.string().describe('The overall predicted disease or condition (e.g., Healthy, Polyp, Ulcer, Esophagitis, Tumor, Infection).'),
   confidence: z.number().describe('The overall confidence score for the prediction (0.0 to 1.0).'),
   vgg_prediction: z.string().describe('Prediction from the simulated VGG16 model architecture.'),
   vgg_confidence: z.number().describe('Confidence for VGG16 (0.0 to 1.0).'),
@@ -47,14 +47,16 @@ const giAnalysisPrompt = ai.definePrompt({
 
 Analyze the following endoscopic image: {{media url=imageDataUri}}
 
-Identify if the tissue appears 'Healthy' or if there are signs of conditions like 'Polyp', 'Ulcer', 'Infection', or 'Tumor'.
+Identify if the tissue appears 'Healthy' or if there are signs of conditions like 'Polyp', 'Ulcer', 'Infection', 'Tumor', or 'Esophagitis'. 
+
+Note: 'Esophagitis' and 'Infection' typically involve the upper GI tract (Esophagus). 'Polyp', 'Ulcer', and 'Tumor' are often associated with the stomach or lower GI tract.
 
 Return a comprehensive diagnostic report in JSON format.
 To simulate a multi-model ensemble system (VGG16, ResNet50, InceptionV3):
 1. Provide an overall 'prediction' and 'confidence' representing the system consensus.
 2. Provide 'vgg_prediction', 'resnet_prediction', and 'inception_prediction'. 
-   - VGG16: Often sensitive to texture and color gradients.
-   - ResNet50: Strong at identifying structural anomalies and edges.
+   - VGG16: Often sensitive to texture and color gradients (Redness in Esophagitis).
+   - ResNet50: Strong at identifying structural anomalies and edges (Polyps, Tumors).
    - InceptionV3: Excellent at multi-scale feature detection.
    
 Reflect minor variations in architectural sensitivity in the simulated confidence scores to mimic a real-world ensemble where models might slightly disagree on edge cases.`,
