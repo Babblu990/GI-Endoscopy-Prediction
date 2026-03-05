@@ -7,7 +7,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock } from "lucide-react"
+import { Upload, X, Zap, Loader2, ShieldCheck, AlertCircle, Clock, Info } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { useToast } from "@/hooks/use-toast"
@@ -18,6 +18,7 @@ import {
   setDocumentNonBlocking 
 } from "@/firebase"
 import { collection, doc } from "firebase/firestore"
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert"
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -69,7 +70,7 @@ export default function UploadPage() {
     if (!user) {
       toast({
         title: "Session Error",
-        description: "Establishing secure connection. Please try again in a moment.",
+        description: "Establishing secure connection. Please wait for initialization.",
         variant: "destructive"
       })
       return
@@ -142,6 +143,9 @@ export default function UploadPage() {
     }
   }
 
+  // Detect the "signup-are-blocked" error specifically
+  const isBlocked = userError?.message?.includes('signup-are-blocked');
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -154,7 +158,27 @@ export default function UploadPage() {
               <p className="text-sm text-muted-foreground mt-1">Upload high-res GI scans for ensemble analysis.</p>
             </div>
 
-            {userError && (
+            {isBlocked && (
+              <Alert variant="destructive" className="bg-destructive/10 border-destructive/20 shadow-2xl">
+                <AlertCircle className="h-5 w-5" />
+                <AlertTitle className="font-black uppercase tracking-widest text-xs">Action Required: Enable Anonymous Sign-in</AlertTitle>
+                <AlertDescription className="mt-2 space-y-3">
+                  <p className="text-xs leading-relaxed">
+                    Firebase Authentication requests are currently blocked. To fix this:
+                  </p>
+                  <ol className="text-xs text-destructive/80 space-y-2 list-decimal list-inside font-medium">
+                    <li>Visit the <strong>Authentication &gt; Sign-in method</strong> tab in your Firebase Console.</li>
+                    <li>Enable the <strong>Anonymous</strong> provider.</li>
+                    <li>Ensure the <strong>Identity Toolkit API</strong> is enabled in the Google Cloud Console.</li>
+                  </ol>
+                  <Button variant="outline" size="sm" className="h-8 text-[10px] font-black uppercase tracking-widest mt-2" asChild>
+                    <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer">Open Firebase Console</a>
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!isBlocked && userError && (
               <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex gap-3 shadow-xl">
                 <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
                 <p className="text-xs text-destructive font-medium">{userError.message}</p>
@@ -204,11 +228,11 @@ export default function UploadPage() {
                 </CardContent>
                 <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 py-6 px-8 border-t border-white/5 mt-4 bg-secondary/10">
                   <div className="flex items-center gap-2.5 text-[10px] text-muted-foreground font-black uppercase tracking-[0.15em]">
-                    <ShieldCheck className={`w-4 h-4 ${user ? 'text-accent' : 'text-destructive'}`} />
-                    {isUserLoading ? "Initializing..." : !user ? "Connecting..." : "Secure Session: Active"}
+                    <ShieldCheck className={`w-4 h-4 ${user ? 'text-accent' : isBlocked ? 'text-destructive' : 'text-primary'}`} />
+                    {isUserLoading ? "Initializing..." : isBlocked ? "Auth Blocked" : !user ? "Connecting..." : "Secure Session: Active"}
                   </div>
                   <Button 
-                    disabled={!preview || isAnalyzing || isUserLoading || !user || cooldown > 0} 
+                    disabled={!preview || isAnalyzing || isUserLoading || !user || cooldown > 0 || isBlocked} 
                     onClick={handleAnalysis}
                     className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-background font-black gap-3 px-10 h-12 shadow-2xl shadow-primary/20 uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95"
                   >
