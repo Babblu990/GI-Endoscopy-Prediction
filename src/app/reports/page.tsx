@@ -7,21 +7,27 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FileText, Download, Filter, Search, MoreVertical, Eye } from "lucide-react"
+import { FileText, Download, Filter, Search, MoreVertical, Eye, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import Link from "next/link"
-
-const MOCK_REPORTS = [
-  { id: "RX-901", patient: "John Doe", diagnosis: "Healthy", confidence: 98, date: "2024-05-15", time: "14:20", image: "https://picsum.photos/seed/scan1/100/100" },
-  { id: "RX-899", patient: "Alice Smith", diagnosis: "Polyp Detected", confidence: 74, date: "2024-05-14", time: "09:45", image: "https://picsum.photos/seed/scan2/100/100" },
-  { id: "RX-898", patient: "Robert Brown", diagnosis: "Ulcerous Tissue", confidence: 86, date: "2024-05-14", time: "11:12", image: "https://picsum.photos/seed/scan3/100/100" },
-  { id: "RX-897", patient: "Michael Green", diagnosis: "Healthy", confidence: 99, date: "2024-05-12", time: "16:30", image: "https://picsum.photos/seed/scan4/100/100" },
-  { id: "RX-896", patient: "Sarah Wilson", diagnosis: "Vascular Ectasia", confidence: 68, date: "2024-05-11", time: "08:15", image: "https://picsum.photos/seed/scan5/100/100" },
-  { id: "RX-895", patient: "James Taylor", diagnosis: "Healthy", confidence: 96, date: "2024-05-10", time: "13:40", image: "https://picsum.photos/seed/scan6/100/100" },
-]
+import { useFirebase, useMemoFirebase, useCollection } from "@/firebase"
+import { collection, query, orderBy } from "firebase/firestore"
+import { format } from "date-fns"
 
 export default function ReportsPage() {
+  const { user, firestore } = useFirebase()
+
+  const predictionsQuery = useMemoFirebase(() => {
+    if (!firestore || !user) return null
+    return query(
+      collection(firestore, 'users', user.uid, 'predictions'),
+      orderBy('uploadedAt', 'desc')
+    )
+  }, [firestore, user])
+
+  const { data: reports, isLoading } = useCollection(predictionsQuery)
+
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -57,64 +63,78 @@ export default function ReportsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader className="border-b border-white/5">
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="w-[100px]">Scan</TableHead>
-                      <TableHead>Case ID</TableHead>
-                      <TableHead>Patient Name</TableHead>
-                      <TableHead>Diagnosis</TableHead>
-                      <TableHead>Confidence</TableHead>
-                      <TableHead>Date / Time</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {MOCK_REPORTS.map((report) => (
-                      <TableRow key={report.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
-                        <TableCell>
-                          <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-white/10">
-                            <Image src={report.image} alt="Scan" fill className="object-cover" />
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-xs font-bold text-primary">{report.id}</TableCell>
-                        <TableCell className="font-medium text-white">{report.patient}</TableCell>
-                        <TableCell>
-                          <Badge 
-                            variant={report.diagnosis.includes("Detected") || report.diagnosis.includes("Tissue") || report.diagnosis.includes("Ectasia") ? "destructive" : "secondary"}
-                            className="text-[10px] px-2 py-0"
-                          >
-                            {report.diagnosis}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                             <div className="w-16 bg-white/5 h-1.5 rounded-full overflow-hidden">
-                                <div className={`h-full ${report.confidence > 90 ? 'bg-accent' : report.confidence > 70 ? 'bg-primary' : 'bg-destructive'}`} style={{ width: `${report.confidence}%` }} />
-                             </div>
-                             <span className="text-xs font-mono font-bold">{report.confidence}%</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-xs">
-                            <p className="text-white">{report.date}</p>
-                            <p className="text-muted-foreground">{report.time}</p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/20 hover:text-primary">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/5">
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+                    <Loader2 className="w-8 h-8 animate-spin mb-4" />
+                    <p>Loading historical records...</p>
+                  </div>
+                ) : !reports || reports.length === 0 ? (
+                  <div className="text-center py-20 border-2 border-dashed border-white/5 rounded-2xl">
+                    <FileText className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-white">No reports found</h3>
+                    <p className="text-muted-foreground mb-6">You haven't performed any AI diagnostic scans yet.</p>
+                    <Button asChild variant="outline">
+                      <Link href="/upload">Upload First Image</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader className="border-b border-white/5">
+                      <TableRow className="hover:bg-transparent">
+                        <TableHead className="w-[100px]">Scan</TableHead>
+                        <TableHead>Case ID</TableHead>
+                        <TableHead>Diagnosis</TableHead>
+                        <TableHead>Confidence</TableHead>
+                        <TableHead>Date / Time</TableHead>
+                        <TableHead className="text-right">Action</TableHead>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+                    </TableHeader>
+                    <TableBody>
+                      {reports.map((report) => (
+                        <TableRow key={report.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                          <TableCell>
+                            <div className="relative w-12 h-12 rounded-lg overflow-hidden border border-white/10 bg-black/40">
+                              <Image src={report.imageUrl} alt="Scan" fill className="object-cover" />
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-mono text-xs font-bold text-primary truncate max-w-[120px]">{report.id}</TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant={report.overallPrediction.toLowerCase() === "healthy" ? "secondary" : "destructive"}
+                              className="text-[10px] px-2 py-0"
+                            >
+                              {report.overallPrediction}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                               <div className="w-16 bg-white/5 h-1.5 rounded-full overflow-hidden">
+                                  <div className={`h-full ${report.overallConfidence > 90 ? 'bg-accent' : report.overallConfidence > 70 ? 'bg-primary' : 'bg-destructive'}`} style={{ width: `${report.overallConfidence}%` }} />
+                               </div>
+                               <span className="text-xs font-mono font-bold">{report.overallConfidence}%</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-xs">
+                              <p className="text-white">{format(new Date(report.uploadedAt), 'MMM dd, yyyy')}</p>
+                              <p className="text-muted-foreground">{format(new Date(report.uploadedAt), 'HH:mm')}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/20 hover:text-primary">
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/5">
+                                <MoreVertical className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </div>

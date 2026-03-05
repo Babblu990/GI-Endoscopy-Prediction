@@ -1,18 +1,23 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useEffect } from "react"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Image as ImageIcon, Zap, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import { Upload, X, Zap, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { processAndPresentGiResults } from "@/ai/flows/process-and-present-gi-results"
-import { storeGIDiagnosticHistory } from "@/ai/flows/store-gi-diagnostic-history"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
+import { 
+  useFirebase, 
+  initiateAnonymousSignIn, 
+  setDocumentNonBlocking 
+} from "@/firebase"
+import { collection, doc } from "firebase/firestore"
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -20,6 +25,14 @@ export default function UploadPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const { firestore, auth, user, isUserLoading } = useFirebase()
+
+  // Ensure user is signed in anonymously to satisfy Firestore rules
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      initiateAnonymousSignIn(auth)
+    }
+  }, [user, isUserLoading, auth])
 
   const onFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
@@ -43,6 +56,14 @@ export default function UploadPage() {
 
   const handleAnalysis = async () => {
     if (!preview) return
+    if (!user) {
+      toast({
+        title: "Authenticating",
+        description: "Setting up your secure session. Please try again in a moment.",
+      })
+      initiateAnonymousSignIn(auth)
+      return
+    }
 
     setIsAnalyzing(true)
     try {
@@ -54,32 +75,41 @@ export default function UploadPage() {
         overallPrediction: analysisResult.prediction,
         overallConfidence: analysisResult.confidence * 100,
         vggPrediction: analysisResult.vgg_prediction,
-        vggConfidence: 72, // Mocking these as base flow doesn't return individual model confidence scores
+        vggConfidence: 72,
         resnetPrediction: analysisResult.resnet_prediction,
         resnetConfidence: 69,
         inceptionPrediction: analysisResult.inception_prediction,
         inceptionConfidence: 75
       })
 
-      // 3. Store in History (Simulated)
-      await storeGIDiagnosticHistory({
-        image: preview,
-        prediction: analysisResult.prediction,
-        confidence: analysisResult.confidence,
-        timestamp: new Date().toISOString(),
-        vgg16: { prediction: analysisResult.vgg_prediction, confidence: 0.72 },
-        resnet50: { prediction: analysisResult.resnet_prediction, confidence: 0.69 },
-        inceptionV3: { prediction: analysisResult.inception_prediction, confidence: 0.75 }
-      })
+      // 3. Store in Firestore (Client-side mutation)
+      const predictionsCol = collection(firestore, 'users', user.uid, 'predictions')
+      const newDocRef = doc(predictionsCol)
+      
+      const predictionData = {
+        id: newDocRef.id,
+        userId: user.uid,
+        uploadedAt: new Date().toISOString(),
+        imageUrl: preview,
+        originalFileName: file?.name || 'scan.jpg',
+        overallPrediction: analysisResult.prediction,
+        overallConfidence: Math.round(analysisResult.confidence * 100),
+        vgg16Prediction: analysisResult.vgg_prediction,
+        vgg16Confidence: 72,
+        resnet50Prediction: analysisResult.resnet_prediction,
+        resnet50Confidence: 69,
+        inceptionV3Prediction: analysisResult.inception_prediction,
+        inceptionV3Confidence: 75,
+        status: presentationResults.predictionCard.status
+      }
+
+      setDocumentNonBlocking(newDocRef, predictionData, { merge: true })
 
       toast({
         title: "Analysis Complete",
         description: `Detection: ${analysisResult.prediction} (${Math.round(analysisResult.confidence * 100)}% confidence)`,
       })
 
-      // In a real app we'd pass state to the results page, for now we redirect to /results
-      // and maybe store the result in a global state/cache.
-      // For this demo, we'll store in localStorage to mock state persistence across pages.
       localStorage.setItem('lastResult', JSON.stringify({ analysisResult, presentationResults, preview }))
       router.push('/results')
 
@@ -158,7 +188,7 @@ export default function UploadPage() {
                     HIPAA Compliant Transfer
                   </div>
                   <Button 
-                    disabled={!preview || isAnalyzing} 
+                    disabled={!preview || isAnalyzing || isUserLoading} 
                     onClick={handleAnalysis}
                     className="cyan-glow bg-primary hover:bg-primary/90 text-background font-bold gap-2 px-8"
                   >
