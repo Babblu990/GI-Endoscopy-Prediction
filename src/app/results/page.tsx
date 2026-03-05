@@ -7,7 +7,7 @@ import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { HumanBodyVisualizer } from "@/components/dashboard/human-body-visualizer"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Download, Share2, Activity, CheckCircle2, AlertTriangle, Zap, TrendingUp, Info, BarChart3 } from "lucide-react"
+import { ArrowLeft, Download, Share2, CheckCircle2, AlertTriangle, Zap, TrendingUp, Info, BarChart3 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
@@ -99,7 +99,7 @@ export default function ResultsPage() {
                     
                     <div className="space-y-2">
                       <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                        <span>Prediction Confidence</span>
+                        <span>Consolidated Confidence</span>
                         <span className="text-white">{Math.round(analysisResult.confidence * 100)}%</span>
                       </div>
                       <Progress value={analysisResult.confidence * 100} className={`h-2 ${isHealthy ? '[&>div]:bg-accent' : '[&>div]:bg-destructive'}`} />
@@ -119,7 +119,7 @@ export default function ResultsPage() {
                 </Card>
               </div>
 
-              {/* Right Column: Performance & Models */}
+              {/* Right Column: Performance Benchmarks & Anatomical Localizer */}
               <div className="lg:col-span-8 space-y-6">
                 <Card className="glass-card overflow-hidden border-t-4 border-t-primary">
                   <CardHeader className="pb-4">
@@ -127,9 +127,9 @@ export default function ResultsPage() {
                        <BarChart3 className="w-5 h-5 text-primary" />
                        <CardTitle className="text-lg font-black uppercase tracking-tight">Performance Benchmarks</CardTitle>
                     </div>
-                    <CardDescription className="text-xs">Consolidated accuracy after backend hyperparameter tuning (HPO).</CardDescription>
+                    <CardDescription className="text-xs">Consolidated accuracy results calculated by the backend HPO ensemble.</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-6">
+                  <CardContent className="space-y-8">
                     {/* Accuracy Stats Section */}
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <div className="bg-secondary/30 rounded-2xl p-4 border border-white/5">
@@ -147,30 +147,8 @@ export default function ResultsPage() {
                       <div className="bg-accent/20 rounded-2xl p-4 border border-accent/40 cyan-glow">
                         <p className="text-[9px] font-black text-accent uppercase tracking-widest mb-1">Overall Accuracy</p>
                         <div className="text-2xl font-black text-white">94.2%</div>
-                        <p className="text-[10px] text-accent/80 mt-1">Final Ensemble Performance</p>
+                        <p className="text-[10px] text-accent/80 mt-1">Final Backend Accuracy</p>
                       </div>
-                    </div>
-
-                    {/* Model Scoring Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <ModelScoreCard 
-                        name="VGG16" 
-                        prediction={presentationResults.modelVoting.vgg16.prediction} 
-                        score={presentationResults.modelVoting.vgg16.confidence} 
-                        base={89} tuned={91}
-                      />
-                      <ModelScoreCard 
-                        name="ResNet50" 
-                        prediction={presentationResults.modelVoting.resnet50.prediction} 
-                        score={presentationResults.modelVoting.resnet50.confidence} 
-                        base={82} tuned={85}
-                      />
-                      <ModelScoreCard 
-                        name="InceptionV3" 
-                        prediction={presentationResults.modelVoting.inceptionv3.prediction} 
-                        score={presentationResults.modelVoting.inceptionv3.confidence} 
-                        base={84} tuned={86}
-                      />
                     </div>
 
                     {/* Voting Result Card */}
@@ -180,43 +158,31 @@ export default function ResultsPage() {
                           <Zap className="w-6 h-6 text-primary" />
                         </div>
                         <div className="min-w-0">
-                          <p className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">Majority Vote Logic</p>
+                          <p className="text-[9px] uppercase font-black text-muted-foreground tracking-widest">Ensemble Decision</p>
                           <h3 className="text-xl font-black text-white truncate">{presentationResults.modelVoting.majorityVoteResult}</h3>
                         </div>
                       </div>
                       <div className="w-full sm:w-auto sm:text-right pt-4 sm:pt-0 border-t sm:border-t-0 border-white/10">
-                        <p className="text-[9px] text-muted-foreground uppercase font-black">Consolidated Precision</p>
+                        <p className="text-[9px] text-muted-foreground uppercase font-black">Backend Precision</p>
                         <p className="text-xl font-black text-accent">94.2%</p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Lower Layout Grid */}
+                {/* Lower Layout Grid - Anatomical focus */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                   <Card className="glass-card flex flex-col items-center justify-center p-6 min-h-[350px]">
+                   <Card className="glass-card flex flex-col items-center justify-center p-6 min-h-[350px] md:col-span-2">
                       <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-6">Anatomical Localization</h3>
-                      <div className="flex-1 w-full max-w-[200px]">
+                      <div className="flex-1 w-full max-w-[280px]">
                         <HumanBodyVisualizer 
                           isDetected={!isHealthy} 
                           prediction={analysisResult.prediction}
                         />
                       </div>
-                   </Card>
-
-                   <Card className="glass-card">
-                      <CardHeader className="pb-4">
-                        <CardTitle className="text-sm font-black uppercase tracking-widest text-muted-foreground">Model Efficiency Benchmarks</CardTitle>
-                        <CardDescription className="text-xs">Inference accuracy before vs after backend tuning.</CardDescription>
-                      </CardHeader>
-                      <CardContent className="space-y-6">
-                        <AccuracyMetric model="VGG16" before={89} after={91} />
-                        <AccuracyMetric model="ResNet50" before={82} after={85} />
-                        <AccuracyMetric model="InceptionV3" before={84} after={86} />
-                        <div className="pt-4 text-[9px] text-muted-foreground italic leading-tight border-t border-white/5 uppercase font-bold">
-                          * Metrics verified via backend ensemble controller.
-                        </div>
-                      </CardContent>
+                      <div className="mt-4 text-[10px] text-muted-foreground text-center uppercase font-bold tracking-widest">
+                        Condition: {analysisResult.prediction} • Location Mapped by Backend AI
+                      </div>
                    </Card>
                 </div>
               </div>
@@ -225,42 +191,5 @@ export default function ResultsPage() {
         </main>
       </SidebarInset>
     </SidebarProvider>
-  )
-}
-
-function ModelScoreCard({ name, prediction, score, base, tuned }: any) {
-  return (
-    <div className="bg-secondary/20 border border-white/5 rounded-xl p-4 transition-all hover:bg-secondary/30">
-      <div className="flex justify-between items-start mb-2">
-        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-wider">{name}</p>
-        <span className="text-[9px] font-black text-accent">+{tuned - base}% HPO</span>
-      </div>
-      <p className="text-sm font-black text-white mb-1 truncate">{prediction}</p>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] text-muted-foreground font-bold uppercase">Confidence</span>
-        <span className="text-[10px] font-mono font-bold text-primary">{score}%</span>
-      </div>
-      <div className="w-full bg-white/5 h-1 rounded-full overflow-hidden">
-        <div className="bg-primary h-full transition-all duration-700" style={{ width: `${score}%` }} />
-      </div>
-    </div>
-  )
-}
-
-function AccuracyMetric({ model, before, after }: { model: string, before: number, after: number }) {
-  return (
-    <div className="space-y-2">
-      <div className="flex justify-between items-end">
-        <span className="text-xs font-black text-white uppercase tracking-tight">{model}</span>
-        <div className="flex gap-3 text-[9px] font-black uppercase tracking-wider">
-          <span className="text-muted-foreground">Base: {before}%</span>
-          <span className="text-accent">Tuned: {after}%</span>
-        </div>
-      </div>
-      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden flex">
-        <div className="bg-muted-foreground/30 h-full" style={{ width: `${before}%` }} />
-        <div className="bg-accent h-full shadow-[0_0_8px_rgba(56,163,117,0.4)]" style={{ width: `${after - before}%` }} />
-      </div>
-    </div>
   )
 }

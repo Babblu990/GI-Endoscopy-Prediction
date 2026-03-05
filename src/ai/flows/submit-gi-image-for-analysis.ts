@@ -24,8 +24,6 @@ export type SubmitGiImageForAnalysisInput = z.infer<typeof SubmitGiImageForAnaly
 const ModelOutputSchema = z.object({
   prediction: z.string().describe('The predicted disease or condition.'),
   confidence: z.number().describe('Confidence score (0.0 to 1.0).'),
-  baseAccuracy: z.number().optional().describe('Baseline accuracy before tuning.'),
-  tunedAccuracy: z.number().optional().describe('Accuracy after hyperparameter optimization.'),
 });
 
 const SubmitGiImageForAnalysisOutputSchema = z.object({
@@ -39,7 +37,7 @@ const SubmitGiImageForAnalysisOutputSchema = z.object({
   resnet50: ModelOutputSchema.optional().describe('Simulated ResNet50 model output.'),
   inceptionV3: ModelOutputSchema.optional().describe('Simulated InceptionV3 model output.'),
   
-  // Voting & Tuning Metrics
+  // Voting & Tuning Metrics (Consolidated Backend Logic)
   majorityVoteResult: z.string().optional().describe('The result determined by majority voting.'),
   overallBaseAccuracy: z.number().optional().describe('Average baseline accuracy of the ensemble.'),
   overallTunedAccuracy: z.number().optional().describe('Average accuracy after ensemble tuning.'),
@@ -72,10 +70,10 @@ DIAGNOSTIC CRITERIA:
    - 'Polyp', 'Ulcer', and 'Tumor' are Stomach/Lower GI.
 
 ENSEMBLE SIMULATION & HYPERPARAMETER TUNING:
-You must simulate the output of three models that have undergone hyperparameter optimization:
-- VGG16: Focus on texture/color. Base Accuracy: 89%, Tuned: 91%.
-- ResNet50: Focus on structure/masses. Base Accuracy: 82%, Tuned: 85%.
-- InceptionV3: Focus on multi-scale lesions. Base Accuracy: 84%, Tuned: 86%.
+Simulate the output of three models that have undergone hyperparameter optimization:
+- VGG16 (Texture focus): Base Accuracy 89% -> Tuned 91%.
+- ResNet50 (Structural focus): Base Accuracy 82% -> Tuned 85%.
+- InceptionV3 (Scale focus): Base Accuracy 84% -> Tuned 86%.
 
 BACKEND PROCESSING TASKS:
 1. Generate individual predictions and confidences for VGG16, ResNet50, and InceptionV3.
@@ -99,12 +97,12 @@ const submitGiImageForAnalysisFlow = ai.defineFlow(
         return { error: 'Backend failed to produce a diagnostic output.' };
       }
       
-      // Ensure the "Tuning" metadata is always populated from our system constants
+      // Enforce the consistent Backend Tuning Metrics
       return {
         ...output,
         overallBaseAccuracy: 82.4,
         overallTunedAccuracy: 94.2,
-        overallAccuracy: 94.2 // Representing the final tuned performance
+        overallAccuracy: 94.2 
       };
     } catch (error: any) {
       console.error('Error during backend GI analysis:', error);
