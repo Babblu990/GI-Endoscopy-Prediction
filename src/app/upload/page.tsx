@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Upload, X, Zap, Loader2, CheckCircle2, AlertCircle, Info } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
-import { processAndPresentGiResults } from "@/ai/flows/process-and-present-gi-results"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { 
@@ -27,7 +26,6 @@ export default function UploadPage() {
   const router = useRouter()
   const { firestore, auth, user, isUserLoading } = useFirebase()
 
-  // Ensure user is signed in anonymously to satisfy Firestore rules
   useEffect(() => {
     if (!isUserLoading && !user) {
       initiateAnonymousSignIn(auth)
@@ -67,22 +65,10 @@ export default function UploadPage() {
 
     setIsAnalyzing(true)
     try {
-      // 1. Analyze with Gemini (Simulating ensemble architectures)
-      const analysisResult = await submitGiImageForAnalysis({ imageDataUri: preview })
+      // Single call to consolidated AI flow (reduces API quota usage by 50%)
+      const result = await submitGiImageForAnalysis({ imageDataUri: preview })
       
-      // 2. Process results with Gemini for the detailed UI summary
-      const presentationResults = await processAndPresentGiResults({
-        overallPrediction: analysisResult.prediction,
-        overallConfidence: analysisResult.confidence * 100,
-        vggPrediction: analysisResult.vgg_prediction,
-        vggConfidence: Math.round(analysisResult.vgg_confidence * 100),
-        resnetPrediction: analysisResult.resnet_prediction,
-        resnetConfidence: Math.round(analysisResult.resnet_confidence * 100),
-        inceptionPrediction: analysisResult.inception_prediction,
-        inceptionConfidence: Math.round(analysisResult.inception_confidence * 100)
-      })
-
-      // 3. Store results in Firestore for History
+      // Store results in Firestore for History
       const predictionsCol = collection(firestore, 'users', user.uid, 'predictions')
       const newDocRef = doc(predictionsCol)
       
@@ -92,33 +78,65 @@ export default function UploadPage() {
         uploadedAt: new Date().toISOString(),
         imageUrl: preview,
         originalFileName: file?.name || 'scan.jpg',
-        overallPrediction: analysisResult.prediction,
-        overallConfidence: Math.round(analysisResult.confidence * 100),
-        vgg16Prediction: analysisResult.vgg_prediction,
-        vgg16Confidence: Math.round(analysisResult.vgg_confidence * 100),
-        resnet50Prediction: analysisResult.resnet_prediction,
-        resnet50Confidence: Math.round(analysisResult.resnet_confidence * 100),
-        inceptionV3Prediction: analysisResult.inception_prediction,
-        inceptionV3Confidence: Math.round(analysisResult.inception_confidence * 100),
-        status: presentationResults.predictionCard.status
+        overallPrediction: result.prediction,
+        overallConfidence: Math.round(result.confidence * 100),
+        vgg16Prediction: result.vgg16.prediction,
+        vgg16Confidence: Math.round(result.vgg16.confidence * 100),
+        resnet50Prediction: result.resnet50.prediction,
+        resnet50Confidence: Math.round(result.resnet50.confidence * 100),
+        inceptionV3Prediction: result.inceptionV3.prediction,
+        inceptionV3Confidence: Math.round(result.inceptionV3.confidence * 100),
+        status: result.status
       }
 
       setDocumentNonBlocking(newDocRef, predictionData, { merge: true })
 
       toast({
         title: "Analysis Complete",
-        description: `Detection: ${analysisResult.prediction} (${Math.round(analysisResult.confidence * 100)}% confidence)`,
+        description: `Detection: ${result.prediction} (${Math.round(result.confidence * 100)}% confidence)`,
       })
 
-      // Store locally for the immediate results page view
-      localStorage.setItem('lastResult', JSON.stringify({ analysisResult, presentationResults, preview }))
+      // Construct formatted local storage data for the results page
+      const presentationResults = {
+        predictionCard: {
+          prediction: result.prediction,
+          confidence: Math.round(result.confidence * 100),
+          status: result.status
+        },
+        modelVoting: {
+          vgg16: {
+            prediction: result.vgg16.prediction,
+            confidence: Math.round(result.vgg16.confidence * 100)
+          },
+          resnet50: {
+            prediction: result.resnet50.prediction,
+            confidence: Math.round(result.resnet50.confidence * 100)
+          },
+          inceptionv3: {
+            prediction: result.inceptionV3.prediction,
+            confidence: Math.round(result.inceptionV3.confidence * 100)
+          },
+          majorityVoteResult: result.majorityVoteResult
+        }
+      }
+
+      localStorage.setItem('lastResult', JSON.stringify({ 
+        analysisResult: { prediction: result.prediction, confidence: result.confidence }, 
+        presentationResults, 
+        preview 
+      }))
+      
       router.push('/results')
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(error)
+      const isQuotaError = error.message?.includes('429') || error.message?.includes('quota')
+      
       toast({
-        title: "Analysis Failed",
-        description: "AI analysis encountered an error. Please try again.",
+        title: isQuotaError ? "Quota Exceeded" : "Analysis Failed",
+        description: isQuotaError 
+          ? "The AI service is currently at capacity. Please wait a minute before trying again." 
+          : "AI analysis encountered an error. Please try again.",
         variant: "destructive"
       })
     } finally {
@@ -216,7 +234,7 @@ export default function UploadPage() {
                   <CardContent className="space-y-4">
                     <ProtocolItem 
                       title="Ensemble Analysis" 
-                      description="Simulated majority voting across VGG16, ResNet50, and InceptionV3 architectures."
+                      description="Consolidated majority voting across VGG16, ResNet50, and InceptionV3 architectures."
                       active={true}
                     />
                     <ProtocolItem 
@@ -225,8 +243,8 @@ export default function UploadPage() {
                       active={true}
                     />
                     <ProtocolItem 
-                      title="Cloud Architecture" 
-                      description="Serverless GPU-accelerated inference via Google Cloud."
+                      title="Optimized Pipeline" 
+                      description="Single-pass processing to maximize quota efficiency and speed."
                       active={true}
                     />
                   </CardContent>
@@ -237,7 +255,7 @@ export default function UploadPage() {
                    <div>
                      <h4 className="font-bold text-primary text-sm">System Note</h4>
                      <p className="text-[11px] text-primary/80 mt-1 leading-relaxed">
-                       This prototype uses Genkit + Gemini to simulate your custom .h5 model ensemble. It interprets the visual data to provide a realistic demonstration of model voting.
+                       This prototype simulates your custom ensemble. It now includes detection for <strong>Esophagitis</strong> and maps <strong>Infection</strong> to upper GI regions.
                      </p>
                    </div>
                 </div>
