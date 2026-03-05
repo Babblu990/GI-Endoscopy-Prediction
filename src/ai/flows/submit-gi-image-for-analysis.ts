@@ -43,15 +43,21 @@ const giAnalysisPrompt = ai.definePrompt({
   name: 'giAnalysisPrompt',
   input: { schema: SubmitGiImageForAnalysisInputSchema },
   output: { schema: SubmitGiImageForAnalysisOutputSchema },
-  prompt: `You are a medical diagnostic AI specialized in gastroenterology.
+  prompt: `You are a medical diagnostic AI specialized in gastroenterology, acting as an ensemble controller for specialized deep learning models.
+
 Analyze the following endoscopic image: {{media url=imageDataUri}}
 
 Identify if the tissue appears 'Healthy' or if there are signs of conditions like 'Polyp', 'Ulcer', 'Infection', or 'Tumor'.
 
 Return a comprehensive diagnostic report in JSON format.
-To simulate a multi-model ensemble system:
-1. Provide an overall 'prediction' and 'confidence'.
-2. Provide 'vgg_prediction', 'resnet_prediction', and 'inception_prediction' with their respective simulated confidence scores. These should generally align with your overall finding but can reflect minor variations in architectural sensitivity to simulate a real-world ensemble.`,
+To simulate a multi-model ensemble system (VGG16, ResNet50, InceptionV3):
+1. Provide an overall 'prediction' and 'confidence' representing the system consensus.
+2. Provide 'vgg_prediction', 'resnet_prediction', and 'inception_prediction'. 
+   - VGG16: Often sensitive to texture and color gradients.
+   - ResNet50: Strong at identifying structural anomalies and edges.
+   - InceptionV3: Excellent at multi-scale feature detection.
+   
+Reflect minor variations in architectural sensitivity in the simulated confidence scores to mimic a real-world ensemble where models might slightly disagree on edge cases.`,
 });
 
 const submitGiImageForAnalysisFlow = ai.defineFlow(

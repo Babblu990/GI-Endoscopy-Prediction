@@ -6,7 +6,7 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Zap, Loader2, CheckCircle2, AlertCircle } from "lucide-react"
+import { Upload, X, Zap, Loader2, CheckCircle2, AlertCircle, Info } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { processAndPresentGiResults } from "@/ai/flows/process-and-present-gi-results"
@@ -140,7 +140,7 @@ export default function UploadPage() {
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="space-y-2">
               <h1 className="text-3xl font-black tracking-tight text-white">Diagnostic Uploader</h1>
-              <p className="text-muted-foreground">Submit high-resolution endoscopic imagery for deep-learning analysis.</p>
+              <p className="text-muted-foreground">Submit high-resolution endoscopic imagery for ensemble neural analysis.</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -186,7 +186,7 @@ export default function UploadPage() {
                 <CardFooter className="flex justify-between items-center gap-4">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <CheckCircle2 className="w-3 h-3 text-accent" />
-                    HIPAA Compliant Transfer
+                    Secure Sandbox Inference
                   </div>
                   <Button 
                     disabled={!preview || isAnalyzing || isUserLoading} 
@@ -211,33 +211,43 @@ export default function UploadPage() {
               <div className="space-y-6">
                 <Card className="glass-card">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground font-bold">Scanning Protocols</CardTitle>
+                    <CardTitle className="text-sm uppercase tracking-widest text-muted-foreground font-bold">Inference Protocols</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <ProtocolItem 
-                      title="Model Voting" 
-                      description="Majority voting across 3 neural architectures."
+                      title="Ensemble Analysis" 
+                      description="Simulated majority voting across VGG16, ResNet50, and InceptionV3 architectures."
                       active={true}
                     />
                     <ProtocolItem 
-                      title="Metadata Extraction" 
-                      description="Automatic detection of lesion boundaries."
+                      title="Medical Image Proxy" 
+                      description="Using Gemini 2.5 Flash as a high-precision diagnostic interpreter."
                       active={true}
                     />
                     <ProtocolItem 
-                      title="Cloud Processing" 
-                      description="GPU-accelerated inference in secure sandbox."
+                      title="Cloud Architecture" 
+                      description="Serverless GPU-accelerated inference via Google Cloud."
                       active={true}
                     />
                   </CardContent>
                 </Card>
+
+                <div className="p-6 rounded-2xl bg-primary/10 border border-primary/20 flex gap-4">
+                   <Info className="w-6 h-6 text-primary shrink-0" />
+                   <div>
+                     <h4 className="font-bold text-primary text-sm">System Note</h4>
+                     <p className="text-[11px] text-primary/80 mt-1 leading-relaxed">
+                       This prototype uses Genkit + Gemini to simulate your custom .h5 model ensemble. It interprets the visual data to provide a realistic demonstration of model voting.
+                     </p>
+                   </div>
+                </div>
 
                 <div className="p-6 rounded-2xl bg-destructive/10 border border-destructive/20 flex gap-4">
                   <AlertCircle className="w-6 h-6 text-destructive shrink-0" />
                   <div>
                     <h4 className="font-bold text-destructive text-sm">Medical Disclaimer</h4>
                     <p className="text-[11px] text-destructive/80 mt-1 leading-relaxed">
-                      This AI system is designed for assistive research and educational purposes only. Results must be validated by a licensed gastroenterologist. DO NOT use for final medical decisions.
+                      Assistive research purposes only. Results must be validated by a licensed gastroenterologist. DO NOT use for clinical decisions.
                     </p>
                   </div>
                 </div>
