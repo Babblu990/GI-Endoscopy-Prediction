@@ -168,7 +168,7 @@ export default function UploadPage() {
                       Firebase reports that anonymous sign-up is blocked. You must manually enable it in your console to run diagnostics:
                     </p>
                     <ol className="text-xs text-destructive/80 space-y-2 list-decimal list-inside font-medium">
-                      <li>Visit the <strong>Authentication > Sign-in method</strong> tab.</li>
+                      <li>Visit the <strong>Authentication &gt; Sign-in method</strong> tab.</li>
                       <li>Enable the <strong>Anonymous</strong> provider.</li>
                       <li>Ensure the <strong>Identity Toolkit API</strong> is enabled in Google Cloud.</li>
                     </ol>
