@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview This file defines a consolidated Genkit flow for analyzing GI endoscopic images.
@@ -10,7 +11,7 @@
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'kit';
+import { z } from 'genkit';
 
 const SubmitGiImageForAnalysisInputSchema = z.object({
   imageDataUri: z
