@@ -1,10 +1,10 @@
-
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     /**
      * FIREBASE SECURITY RULES
      * Global access model for public clinical portal MVP.
+     * Removed all user-specific ownership logic.
      */
     match /predictions/{predictionId} {
       allow read, write: if true;

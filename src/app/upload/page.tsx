@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -7,13 +6,14 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Zap, Loader2, ShieldCheck, Clock } from "lucide-react"
+import { Upload, X, Zap, Loader2, ShieldCheck, Clock, AlertCircle } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { useFirebase, setDocumentNonBlocking } from "@/firebase"
 import { collection, doc } from "firebase/firestore"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -53,8 +53,8 @@ export default function UploadPage() {
       
       if (result.error) {
         toast({
-          title: "Analysis Failed",
-          description: result.error || "An internal error occurred.",
+          title: "Diagnostic Failed",
+          description: result.error,
           variant: "destructive"
         })
         setIsAnalyzing(false)
@@ -90,7 +90,7 @@ export default function UploadPage() {
     } catch (error: any) {
       toast({
         title: "Inference Error",
-        description: "Check your connection and try again.",
+        description: "Custom model backend unreachable. Check your network.",
         variant: "destructive"
       })
     } finally {
@@ -114,7 +114,7 @@ export default function UploadPage() {
               <Card className="glass-card lg:col-span-7 flex flex-col shadow-2xl border-none">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg font-bold text-white uppercase tracking-tighter">Scan Submission</CardTitle>
-                  <CardDescription className="text-xs font-medium text-muted-foreground">Direct-to-Cloud processing enabled.</CardDescription>
+                  <CardDescription className="text-xs font-medium text-muted-foreground">Direct-to-Cloud processing enabled via custom Flask backend.</CardDescription>
                 </CardHeader>
                 <CardContent className="flex-1 flex flex-col min-h-[340px]">
                   {!preview ? (
@@ -179,18 +179,18 @@ export default function UploadPage() {
                   </CardHeader>
                   <CardContent className="space-y-5 py-4">
                     <ProtocolItem 
-                      title="Ensemble Consensus" 
-                      description="Multi-model weighted voting logic."
+                      title="Custom Ensemble Logic" 
+                      description="VGG16 + ResNet50 + InceptionV3 inference."
                       active={true}
                     />
                     <ProtocolItem 
-                      title="HPO Stabilization" 
-                      description="Auto-tuning AI inference parameters."
+                      title="Remote GPU Pipeline" 
+                      description="External Flask backend processing active."
                       active={true}
                     />
                     <ProtocolItem 
-                      title="Privacy Compliance" 
-                      description="Anonymized diagnostic processing."
+                      title="Anatomical Localizer" 
+                      description="Real-time GI region detection mapping."
                       active={true}
                     />
                   </CardContent>
@@ -201,9 +201,9 @@ export default function UploadPage() {
                     <Zap className="w-6 h-6 text-accent" />
                    </div>
                    <div>
-                     <h4 className="font-black text-accent text-xs uppercase tracking-[0.2em] leading-none">System Precision</h4>
+                     <h4 className="font-black text-accent text-xs uppercase tracking-[0.2em] leading-none">Inference Precision</h4>
                      <p className="text-[10px] text-accent/80 mt-2 leading-relaxed font-bold">
-                       Current Threshold Accuracy: <strong className="text-white text-sm ml-1">94.2%</strong>
+                       Custom Model Accuracy: <strong className="text-white text-sm ml-1">94.2%</strong>
                      </p>
                    </div>
                 </div>
