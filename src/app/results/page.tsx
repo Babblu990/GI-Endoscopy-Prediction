@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState, Suspense } from "react"
@@ -191,7 +192,7 @@ Disclaimer: This is an AI-generated research output. All findings must be confir
               <CardContent className="px-8 pb-8 space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-accent/15 rounded-3xl p-8 border border-accent/30 cyan-glow flex flex-col items-center justify-center text-center">
-                    <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">Overall Accuracy</p>
+                    <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">Result Accuracy</p>
                     <div className="text-5xl font-black text-white tracking-tighter">
                       {Math.round(analysisResult.confidence * 100)}%
                     </div>

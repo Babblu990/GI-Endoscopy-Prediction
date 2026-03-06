@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -119,37 +120,45 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
         `}</style>
       </svg>
       
-      {/* Dynamic Cyber-Bracket HUD Overlay */}
+      {/* Floating Data Node HUD Overlay */}
       {isDetected && (
         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-           <div className="relative w-full h-full max-w-[280px] max-h-[500px]">
-              {/* Top Left Bracket */}
-              <div className="absolute top-10 left-0 w-8 h-8 border-t-2 border-l-2 border-accent/60 rounded-tl-xl animate-in fade-in zoom-in duration-500" />
-              {/* Top Right Bracket */}
-              <div className="absolute top-10 right-0 w-8 h-8 border-t-2 border-r-2 border-accent/60 rounded-tr-xl animate-in fade-in zoom-in duration-500" />
-              {/* Bottom Left Bracket */}
-              <div className="absolute bottom-10 left-0 w-8 h-8 border-b-2 border-l-2 border-accent/60 rounded-bl-xl animate-in fade-in zoom-in duration-500" />
-              {/* Bottom Right Bracket */}
-              <div className="absolute bottom-10 right-0 w-8 h-8 border-b-2 border-r-2 border-accent/60 rounded-br-xl animate-in fade-in zoom-in duration-500" />
-
-              {/* Data Overlay Box */}
-              <div className="absolute top-20 -right-16 glass-card border-accent/30 p-3 rounded-2xl min-w-[160px] shadow-2xl animate-in slide-in-from-right duration-700">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-                  <span className="text-[9px] font-black text-accent uppercase tracking-widest">Active Finding</span>
+           <div className="relative w-full h-full max-w-[300px] max-h-[500px]">
+              {/* Connecting Line to Organ */}
+              <div 
+                className="absolute left-1/2 w-16 h-px bg-gradient-to-r from-accent to-transparent animate-in slide-in-from-left duration-700" 
+                style={{ 
+                  top: isEsophagus ? '175px' : isStomach ? '275px' : '385px',
+                  left: '50%'
+                }} 
+              />
+              
+              {/* Floating Diagnostic Node */}
+              <div 
+                className="absolute glass-card border-accent/40 p-4 rounded-3xl min-w-[180px] shadow-2xl animate-in fade-in zoom-in duration-500"
+                style={{ 
+                  top: isEsophagus ? '150px' : isStomach ? '250px' : '360px',
+                  right: '-60px'
+                }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  <span className="text-[10px] font-black text-accent uppercase tracking-[0.2em]">Finding Detected</span>
                 </div>
-                <p className="text-white text-xs font-black uppercase tracking-tight leading-none mb-1 truncate">{prediction}</p>
-                <div className="h-[1px] w-full bg-white/10 my-1.5" />
-                <div className="flex justify-between items-center text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
+                <h4 className="text-white text-sm font-black uppercase tracking-tight mb-2 leading-none">{prediction}</h4>
+                <div className="flex justify-between items-center text-[9px] font-bold text-muted-foreground uppercase tracking-widest bg-white/5 p-2 rounded-xl">
                   <span>Sector</span>
-                  <span className="text-accent/80 font-black">
-                    {isEsophagus ? "Upper GI" : isStomach ? "Gastric" : "Lower GI"}
+                  <span className="text-white">
+                    {isEsophagus ? "Esophageal" : isStomach ? "Gastric" : "Colonic"}
                   </span>
                 </div>
               </div>
 
-              {/* Scan Line Detail */}
-              <div className="absolute left-1/2 -translate-x-1/2 w-full h-px bg-accent/20 animate-[pulse_2s_infinite]" style={{ top: isEsophagus ? '175px' : isStomach ? '275px' : '385px' }} />
+              {/* HUD Brackets (Corner Accents) */}
+              <div className="absolute top-10 left-0 w-6 h-6 border-t-2 border-l-2 border-white/20 rounded-tl-lg" />
+              <div className="absolute top-10 right-0 w-6 h-6 border-t-2 border-r-2 border-white/20 rounded-tr-lg" />
+              <div className="absolute bottom-10 left-0 w-6 h-6 border-b-2 border-l-2 border-white/20 rounded-bl-lg" />
+              <div className="absolute bottom-10 right-0 w-6 h-6 border-b-2 border-r-2 border-white/20 rounded-br-lg" />
            </div>
         </div>
       )}
