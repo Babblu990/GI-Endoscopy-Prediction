@@ -6,14 +6,13 @@ import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, X, Zap, Loader2, ShieldCheck, Clock, AlertCircle } from "lucide-react"
+import { Upload, X, Zap, Loader2, ShieldCheck, Clock } from "lucide-react"
 import Image from "next/image"
 import { submitGiImageForAnalysis } from "@/ai/flows/submit-gi-image-for-analysis"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { useFirebase, setDocumentNonBlocking } from "@/firebase"
 import { collection, doc } from "firebase/firestore"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null)
@@ -80,12 +79,13 @@ export default function UploadPage() {
       setDocumentNonBlocking(newDocRef, predictionData, { merge: true })
 
       localStorage.setItem('lastResult', JSON.stringify({ 
+        id: newDocRef.id,
         analysisResult: { prediction: finalPrediction, confidence: result.confidence || 0 }, 
         presentationResults: { predictionCard: { prediction: finalPrediction, confidence: finalConfidence, status: result.status || 'Completed' } }, 
         preview 
       }))
       
-      router.push('/results')
+      router.push(`/results?id=${newDocRef.id}`)
 
     } catch (error: any) {
       toast({
@@ -122,7 +122,7 @@ export default function UploadPage() {
                       <input 
                         type="file" 
                         onChange={onFileChange} 
-                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        className="absolute inset-0 opacity-0 cursor-pointer z-50"
                         accept="image/*"
                       />
                       <div className="bg-primary/10 p-5 rounded-full mb-4 group-hover:scale-110 transition-transform duration-300">

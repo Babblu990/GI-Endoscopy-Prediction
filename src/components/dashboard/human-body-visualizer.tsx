@@ -128,10 +128,10 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
         `}</style>
       </svg>
       
-      {/* Live Region HUD Detail */}
+      {/* Live Region HUD Detail - Removed Black Background Box for Better Visibility */}
       {isDetected && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center pointer-events-none z-10">
-          <div className="bg-black/90 backdrop-blur-3xl text-accent border border-accent/40 px-8 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] shadow-[0_0_60px_rgba(56,163,117,0.5)] text-center animate-in fade-in zoom-in duration-700">
+          <div className="bg-primary/10 backdrop-blur-md text-accent border border-accent/40 px-8 py-5 rounded-[2rem] text-[11px] font-black uppercase tracking-[0.4em] shadow-[0_0_60px_rgba(56,163,117,0.3)] text-center animate-in fade-in zoom-in duration-700">
             <span className="text-white/60 text-[9px] mb-2 block">Detection Focal Point</span>
             {isEsophagus ? "Upper GI Target" : isStomach ? "Gastric Target" : "Lower GI Target"}
             <div className="h-px w-full bg-accent/30 my-3" />

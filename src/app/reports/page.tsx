@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -174,8 +173,10 @@ export default function ReportsPage() {
                             </TableCell>
                             <TableCell className="text-right pr-6">
                               <div className="flex items-center justify-end gap-1">
-                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/20 hover:text-primary">
-                                  <Eye className="w-4 h-4" />
+                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/20 hover:text-primary" asChild>
+                                  <Link href={`/results?id=${report.id}`}>
+                                    <Eye className="w-4 h-4" />
+                                  </Link>
                                 </Button>
                                 <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/5">
                                   <MoreVertical className="w-4 h-4" />
