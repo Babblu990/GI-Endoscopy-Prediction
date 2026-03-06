@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -113,7 +114,7 @@ export default function ReportsPage() {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-black text-white">Clinical Archive</h1>
-                <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">Public clinical history for research and diagnostic review.</p>
+                <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">Global diagnostic history for research and clinical review.</p>
               </div>
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <Button 
@@ -146,7 +147,7 @@ export default function ReportsPage() {
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                     <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                    <p className="text-sm font-medium">Loading system archive...</p>
+                    <p className="text-sm font-medium">Loading clinical archive...</p>
                   </div>
                 ) : !reports || reports.length === 0 ? (
                   <div className="text-center py-20 px-6 border-y border-white/5">
@@ -212,24 +213,24 @@ export default function ReportsPage() {
                                       <MoreVertical className="w-4 h-4" />
                                     </Button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end" className="w-48 glass-card border-white/10 text-white">
-                                    <DropdownMenuItem asChild className="cursor-pointer gap-2 focus:bg-primary/20 focus:text-primary">
+                                  <DropdownMenuContent align="end" className="w-52 glass-card border-white/10 text-white p-2">
+                                    <DropdownMenuItem asChild className="cursor-pointer gap-3 focus:bg-primary/20 focus:text-primary rounded-xl h-10">
                                       <Link href={`/results?id=${report.id}`}>
-                                        <ExternalLink className="w-4 h-4" /> View Details
+                                        <ExternalLink className="w-4 h-4" /> <span>View Details</span>
                                       </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem 
-                                      className="cursor-pointer gap-2 focus:bg-primary/20 focus:text-primary"
+                                      className="cursor-pointer gap-3 focus:bg-primary/20 focus:text-primary rounded-xl h-10"
                                       onClick={() => handleExportCSV(report)}
                                     >
-                                      <Download className="w-4 h-4" /> Export Row CSV
+                                      <Download className="w-4 h-4" /> <span>Export Row CSV</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuSeparator className="bg-white/5" />
+                                    <DropdownMenuSeparator className="bg-white/5 my-1" />
                                     <DropdownMenuItem 
-                                      className="cursor-pointer gap-2 text-destructive focus:bg-destructive/20 focus:text-destructive"
+                                      className="cursor-pointer gap-3 text-destructive focus:bg-destructive/20 focus:text-destructive rounded-xl h-10"
                                       onClick={() => handleDeleteReport(report.id)}
                                     >
-                                      <Trash2 className="w-4 h-4" /> Delete Record
+                                      <Trash2 className="w-4 h-4" /> <span>Delete Record</span>
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>

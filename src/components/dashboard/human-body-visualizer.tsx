@@ -1,3 +1,4 @@
+
 "use client"
 
 import React from 'react';
@@ -47,9 +48,7 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
           </filter>
         </defs>
 
-        {/* Realistic Medical Silhouette */}
         <g className="transition-all duration-1000">
-          {/* Head & Neck */}
           <path
             d="M120 10C90 10 75 35 75 65C75 95 90 115 120 115C150 115 165 95 165 65C165 35 150 10 120 10Z"
             fill="url(#bodyGradient)"
@@ -57,7 +56,6 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
             strokeOpacity="0.1"
             strokeWidth="1.5"
           />
-          {/* Torso & Limbs */}
           <path
             d="M80 120C55 125 35 145 25 180C15 220 10 280 15 350C20 420 40 460 55 450C70 440 75 380 75 300L75 570C75 590 90 595 105 595L115 420L125 420L135 595C150 595 165 590 165 570L165 300C165 380 170 440 185 450C200 460 220 420 225 350C230 280 225 220 215 180C205 145 185 125 160 120H80Z"
             fill="url(#bodyGradient)"
@@ -67,9 +65,7 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
           />
         </g>
 
-        {/* Detailed Anatomical GI Tract */}
         <g className="transition-all duration-1000">
-          {/* Esophagus (Upper GI) */}
           <path
             d="M120 120V230"
             className={cn(
@@ -80,7 +76,6 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
             filter={isDetected && isEsophagus ? "url(#glow)" : ""}
           />
 
-          {/* Stomach (Gastric) */}
           <path
             d="M120 230C120 230 90 235 85 270C80 305 115 325 140 325C165 325 180 305 175 265C170 235 145 230 127 230"
             className={cn(
@@ -90,7 +85,6 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
             filter={isDetected && isStomach ? "url(#glow)" : ""}
           />
 
-          {/* Intestinal Region (Lower GI) */}
           <path
             d="M85 335H155V430H85V335"
             className={cn(
@@ -101,7 +95,6 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
             filter={isDetected && isLowerGI ? "url(#glow)" : ""}
           />
 
-          {/* Dynamic Detection HUD Overlays */}
           {isDetected && (
             <g className="animate-pulse">
               {isEsophagus && <circle cx="120" cy="175" r="35" fill="url(#organGlow)" />}
@@ -111,7 +104,6 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
           )}
         </g>
 
-        {/* Live HUD Scanline Animation */}
         <line
           x1="10" y1="0" x2="230" y2="0"
           className="stroke-primary/80 stroke-[3px] animate-[scan_4s_linear_infinite]"
@@ -128,14 +120,19 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
         `}</style>
       </svg>
       
-      {/* Live Region HUD Detail - Restored Original Style with Black Background */}
+      {/* Live Region HUD Detail - New Modern Glass-morphism Style */}
       {isDetected && (
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center pointer-events-none z-10">
-          <div className="bg-black/80 backdrop-blur-md text-accent border border-white/10 p-4 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-2xl text-center animate-in fade-in zoom-in duration-500">
-            <span className="text-white/60 text-[8px] mb-1 block">Detection Focal Point</span>
-            {isEsophagus ? "Upper GI Target" : isStomach ? "Gastric Target" : "Lower GI Target"}
-            <div className="h-px w-full bg-accent/20 my-2" />
-            <span className="text-white text-xs">{prediction}</span>
+          <div className="glass-card border-accent/20 p-5 rounded-3xl text-[10px] font-black uppercase tracking-widest shadow-2xl text-center animate-in fade-in zoom-in duration-500 max-w-[200px]">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
+              <span className="text-accent font-black">Region Analysis</span>
+            </div>
+            <div className="h-px w-full bg-white/10 my-2" />
+            <span className="text-white text-sm block mb-1 tracking-tight">{prediction}</span>
+            <span className="text-[8px] text-muted-foreground font-mono opacity-80 uppercase tracking-[0.2em]">
+              {isEsophagus ? "Upper GI Sector" : isStomach ? "Gastric Sector" : "Lower GI Sector"}
+            </span>
           </div>
         </div>
       )}
