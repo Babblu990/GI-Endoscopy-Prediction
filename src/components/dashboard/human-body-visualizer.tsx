@@ -25,7 +25,7 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
     <div className={cn("relative w-full h-full flex items-center justify-center p-4", className)}>
       <svg
         viewBox="0 0 240 600"
-        className="w-full h-full max-h-[550px] drop-shadow-[0_0_50px_rgba(0,0,0,0.8)]"
+        className="w-full h-full max-h-[550px]"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
@@ -40,7 +40,7 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
             <stop offset="100%" stopColor="white" stopOpacity="0.05" />
           </linearGradient>
           <filter id="glow">
-            <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
             <feMerge>
               <feMergeNode in="coloredBlur"/>
               <feMergeNode in="SourceGraphic"/>
@@ -70,7 +70,7 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
             d="M120 120V230"
             className={cn(
               "stroke-white/10 fill-none transition-all duration-700",
-              isDetected && isEsophagus ? "stroke-accent stroke-[12px] opacity-100" : "stroke-[5px] opacity-20"
+              isDetected && isEsophagus ? "stroke-accent stroke-[10px] opacity-100" : "stroke-[3px] opacity-20"
             )}
             strokeLinecap="round"
             filter={isDetected && isEsophagus ? "url(#glow)" : ""}
@@ -80,7 +80,7 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
             d="M120 230C120 230 90 235 85 270C80 305 115 325 140 325C165 325 180 305 175 265C170 235 145 230 127 230"
             className={cn(
               "stroke-white/10 fill-white/5 transition-all duration-700",
-              isDetected && isStomach ? "stroke-accent fill-accent/40 stroke-[8px] opacity-100" : "stroke-[3px] opacity-15"
+              isDetected && isStomach ? "stroke-accent fill-accent/40 stroke-[6px] opacity-100" : "stroke-[2px] opacity-15"
             )}
             filter={isDetected && isStomach ? "url(#glow)" : ""}
           />
@@ -89,7 +89,7 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
             d="M85 335H155V430H85V335"
             className={cn(
               "stroke-white/10 fill-white/5 transition-all duration-700",
-              isDetected && isLowerGI ? "stroke-accent fill-accent/30 stroke-[8px] opacity-100" : "stroke-[3px] opacity-15"
+              isDetected && isLowerGI ? "stroke-accent fill-accent/30 stroke-[6px] opacity-100" : "stroke-[2px] opacity-15"
             )}
             strokeLinejoin="round"
             filter={isDetected && isLowerGI ? "url(#glow)" : ""}
@@ -97,16 +97,16 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
 
           {isDetected && (
             <g className="animate-pulse">
-              {isEsophagus && <circle cx="120" cy="175" r="35" fill="url(#organGlow)" />}
-              {isStomach && <circle cx="125" cy="275" r="45" fill="url(#organGlow)" />}
-              {isLowerGI && <circle cx="120" cy="385" r="50" fill="url(#organGlow)" />}
+              {isEsophagus && <circle cx="120" cy="175" r="30" fill="url(#organGlow)" />}
+              {isStomach && <circle cx="125" cy="275" r="40" fill="url(#organGlow)" />}
+              {isLowerGI && <circle cx="120" cy="385" r="45" fill="url(#organGlow)" />}
             </g>
           )}
         </g>
 
         <line
-          x1="10" y1="0" x2="230" y2="0"
-          className="stroke-primary/80 stroke-[3px] animate-[scan_4s_linear_infinite]"
+          x1="0" y1="0" x2="240" y2="0"
+          className="stroke-primary/60 stroke-[2px] animate-[scan_4s_linear_infinite]"
           filter="url(#glow)"
         />
 
@@ -120,20 +120,26 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
         `}</style>
       </svg>
       
-      {/* Live Region HUD Detail - New Modern Glass-morphism Style */}
+      {/* Modern Clinical HUD Diagnostic Interface */}
       {isDetected && (
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex flex-col items-center pointer-events-none z-10">
-          <div className="glass-card border-accent/20 p-5 rounded-3xl text-[10px] font-black uppercase tracking-widest shadow-2xl text-center animate-in fade-in zoom-in duration-500 max-w-[200px]">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-accent animate-ping" />
-              <span className="text-accent font-black">Region Analysis</span>
-            </div>
-            <div className="h-px w-full bg-white/10 my-2" />
-            <span className="text-white text-sm block mb-1 tracking-tight">{prediction}</span>
-            <span className="text-[8px] text-muted-foreground font-mono opacity-80 uppercase tracking-[0.2em]">
-              {isEsophagus ? "Upper GI Sector" : isStomach ? "Gastric Sector" : "Lower GI Sector"}
-            </span>
-          </div>
+        <div className="absolute top-[30%] -right-8 flex items-start gap-4 pointer-events-none animate-in fade-in slide-in-from-right duration-700">
+           <div className="w-16 h-px bg-accent/50 mt-4 relative">
+             <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full border border-accent bg-accent/20 animate-ping" />
+           </div>
+           <div className="glass-card border-accent/30 p-4 rounded-2xl min-w-[180px] shadow-[0_0_40px_-10px_rgba(var(--accent),0.2)]">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                <span className="text-[10px] font-black text-accent uppercase tracking-widest">Active Finding</span>
+              </div>
+              <p className="text-white text-sm font-black uppercase tracking-tight leading-none mb-1">{prediction}</p>
+              <div className="h-px w-full bg-white/5 my-2" />
+              <div className="flex justify-between items-center text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
+                <span>Sector</span>
+                <span className="text-accent/80">
+                   {isEsophagus ? "Upper GI" : isStomach ? "Gastric" : "Lower GI"}
+                </span>
+              </div>
+           </div>
         </div>
       )}
     </div>
