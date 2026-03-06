@@ -62,7 +62,7 @@ Consensus Prediction: ${data.analysisResult.prediction}
 Confidence Score: ${Math.round(data.analysisResult.confidence * 100)}%
 
 2. ARCHITECTURE PERFORMANCE:
-Final Overall System Accuracy: 94.2%
+Final Overall System Accuracy: ${Math.round(data.analysisResult.confidence * 100)}%
 Core Logic: Backend Hyperparameter-Tuned Ensemble
 Models Consulted: VGG16, ResNet50, InceptionV3 (Majority Vote)
 
@@ -158,7 +158,7 @@ Disclaimer: This is an AI-generated research output. All findings must be confir
                 
                 <div className="space-y-3">
                   <div className="flex justify-between text-[11px] font-black uppercase tracking-widest text-muted-foreground">
-                    <span>Confidence Level</span>
+                    <span>Inference Confidence</span>
                     <span className="text-white font-mono">{Math.round(analysisResult.confidence * 100)}%</span>
                   </div>
                   <Progress value={analysisResult.confidence * 100} className={`h-2.5 rounded-full ${isHealthy ? '[&>div]:bg-accent' : '[&>div]:bg-destructive'}`} />
@@ -192,7 +192,9 @@ Disclaimer: This is an AI-generated research output. All findings must be confir
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-accent/15 rounded-3xl p-8 border border-accent/30 cyan-glow flex flex-col items-center justify-center text-center">
                     <p className="text-[10px] font-black text-accent uppercase tracking-[0.3em] mb-2">Overall Accuracy</p>
-                    <div className="text-5xl font-black text-white tracking-tighter">94.2%</div>
+                    <div className="text-5xl font-black text-white tracking-tighter">
+                      {Math.round(analysisResult.confidence * 100)}%
+                    </div>
                     <p className="text-[11px] text-accent/80 mt-3 font-black uppercase tracking-widest">Backend Tuned</p>
                   </div>
                   

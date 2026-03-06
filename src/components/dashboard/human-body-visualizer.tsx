@@ -1,4 +1,3 @@
-
 "use client"
 
 import React from 'react';
@@ -120,25 +119,37 @@ export function HumanBodyVisualizer({ isDetected, prediction, className }: Human
         `}</style>
       </svg>
       
-      {/* Modern Clinical HUD Diagnostic Interface */}
+      {/* Dynamic Cyber-Bracket HUD Overlay */}
       {isDetected && (
-        <div className="absolute top-[30%] -right-8 flex items-start gap-4 pointer-events-none animate-in fade-in slide-in-from-right duration-700">
-           <div className="w-16 h-px bg-accent/50 mt-4 relative">
-             <div className="absolute -left-1.5 -top-1.5 w-3 h-3 rounded-full border border-accent bg-accent/20 animate-ping" />
-           </div>
-           <div className="glass-card border-accent/30 p-4 rounded-2xl min-w-[180px] shadow-[0_0_40px_-10px_rgba(var(--accent),0.2)]">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                <span className="text-[10px] font-black text-accent uppercase tracking-widest">Active Finding</span>
+        <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+           <div className="relative w-full h-full max-w-[280px] max-h-[500px]">
+              {/* Top Left Bracket */}
+              <div className="absolute top-10 left-0 w-8 h-8 border-t-2 border-l-2 border-accent/60 rounded-tl-xl animate-in fade-in zoom-in duration-500" />
+              {/* Top Right Bracket */}
+              <div className="absolute top-10 right-0 w-8 h-8 border-t-2 border-r-2 border-accent/60 rounded-tr-xl animate-in fade-in zoom-in duration-500" />
+              {/* Bottom Left Bracket */}
+              <div className="absolute bottom-10 left-0 w-8 h-8 border-b-2 border-l-2 border-accent/60 rounded-bl-xl animate-in fade-in zoom-in duration-500" />
+              {/* Bottom Right Bracket */}
+              <div className="absolute bottom-10 right-0 w-8 h-8 border-b-2 border-r-2 border-accent/60 rounded-br-xl animate-in fade-in zoom-in duration-500" />
+
+              {/* Data Overlay Box */}
+              <div className="absolute top-20 -right-16 glass-card border-accent/30 p-3 rounded-2xl min-w-[160px] shadow-2xl animate-in slide-in-from-right duration-700">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+                  <span className="text-[9px] font-black text-accent uppercase tracking-widest">Active Finding</span>
+                </div>
+                <p className="text-white text-xs font-black uppercase tracking-tight leading-none mb-1 truncate">{prediction}</p>
+                <div className="h-[1px] w-full bg-white/10 my-1.5" />
+                <div className="flex justify-between items-center text-[8px] font-bold text-muted-foreground uppercase tracking-widest">
+                  <span>Sector</span>
+                  <span className="text-accent/80 font-black">
+                    {isEsophagus ? "Upper GI" : isStomach ? "Gastric" : "Lower GI"}
+                  </span>
+                </div>
               </div>
-              <p className="text-white text-sm font-black uppercase tracking-tight leading-none mb-1">{prediction}</p>
-              <div className="h-px w-full bg-white/5 my-2" />
-              <div className="flex justify-between items-center text-[9px] font-bold text-muted-foreground uppercase tracking-widest">
-                <span>Sector</span>
-                <span className="text-accent/80">
-                   {isEsophagus ? "Upper GI" : isStomach ? "Gastric" : "Lower GI"}
-                </span>
-              </div>
+
+              {/* Scan Line Detail */}
+              <div className="absolute left-1/2 -translate-x-1/2 w-full h-px bg-accent/20 animate-[pulse_2s_infinite]" style={{ top: isEsophagus ? '175px' : isStomach ? '275px' : '385px' }} />
            </div>
         </div>
       )}
