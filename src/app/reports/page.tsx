@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -8,12 +9,29 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { FileText, Download, Filter, Search, MoreVertical, Eye, Loader2 } from "lucide-react"
+import { 
+  FileText, 
+  Download, 
+  Filter, 
+  Search, 
+  MoreVertical, 
+  Eye, 
+  Loader2,
+  Trash2,
+  ExternalLink
+} from "lucide-react"
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import Image from "next/image"
 import Link from "next/link"
-import { useFirebase, useMemoFirebase, useCollection } from "@/firebase"
-import { collection, query, orderBy } from "firebase/firestore"
+import { useFirebase, useMemoFirebase, useCollection, deleteDocumentNonBlocking } from "@/firebase"
+import { collection, query, orderBy, doc } from "firebase/firestore"
 import { format } from "date-fns"
 
 function FormattedDate({ dateString }: { dateString: string }) {
@@ -48,11 +66,12 @@ export default function ReportsPage() {
 
   const { data: reports, isLoading } = useCollection(predictionsQuery)
 
-  const handleExportCSV = () => {
-    if (!reports || reports.length === 0) return
+  const handleExportCSV = (specificReport?: any) => {
+    const reportsToExport = specificReport ? [specificReport] : reports
+    if (!reportsToExport || reportsToExport.length === 0) return
 
     const headers = ["Scan ID", "Diagnosis", "Confidence", "Date", "Time", "Original File"]
-    const csvRows = reports.map(r => {
+    const csvRows = reportsToExport.map(r => {
       const date = new Date(r.uploadedAt)
       return [
         r.id,
@@ -69,11 +88,20 @@ export default function ReportsPage() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.setAttribute("href", url)
-    link.setAttribute("download", `GI_Detect_Archive_${format(new Date(), 'yyyyMMdd')}.csv`)
+    const filename = specificReport 
+      ? `GI_Scan_${specificReport.id.substring(0,8)}.csv` 
+      : `GI_Detect_Archive_${format(new Date(), 'yyyyMMdd')}.csv`
+    link.setAttribute("download", filename)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
+  }
+
+  const handleDeleteReport = (reportId: string) => {
+    if (!firestore) return
+    const docRef = doc(firestore, 'predictions', reportId)
+    deleteDocumentNonBlocking(docRef)
   }
 
   return (
@@ -91,11 +119,11 @@ export default function ReportsPage() {
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <Button 
                   variant="outline" 
-                  onClick={handleExportCSV}
+                  onClick={() => handleExportCSV()}
                   disabled={!reports || reports.length === 0}
                   className="flex-1 md:flex-none gap-2 border-white/5 bg-secondary/30 text-xs h-10"
                 >
-                  <Download className="w-4 h-4" /> Export CSV
+                  <Download className="w-4 h-4" /> Export All CSV
                 </Button>
                 <Button className="flex-1 md:flex-none bg-primary text-background font-bold gap-2 cyan-glow h-10" asChild>
                   <Link href="/upload"><FileText className="w-4 h-4" /> New Analysis</Link>
@@ -178,9 +206,34 @@ export default function ReportsPage() {
                                     <Eye className="w-4 h-4" />
                                   </Link>
                                 </Button>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/5">
-                                  <MoreVertical className="w-4 h-4" />
-                                </Button>
+                                
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-white/5">
+                                      <MoreVertical className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48 glass-card border-white/10 text-white">
+                                    <DropdownMenuItem asChild className="cursor-pointer gap-2 focus:bg-primary/20 focus:text-primary">
+                                      <Link href={`/results?id=${report.id}`}>
+                                        <ExternalLink className="w-4 h-4" /> View Details
+                                      </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className="cursor-pointer gap-2 focus:bg-primary/20 focus:text-primary"
+                                      onClick={() => handleExportCSV(report)}
+                                    >
+                                      <Download className="w-4 h-4" /> Export Row CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-white/5" />
+                                    <DropdownMenuItem 
+                                      className="cursor-pointer gap-2 text-destructive focus:bg-destructive/20 focus:text-destructive"
+                                      onClick={() => handleDeleteReport(report.id)}
+                                    >
+                                      <Trash2 className="w-4 h-4" /> Delete Record
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               </div>
                             </TableCell>
                           </TableRow>
