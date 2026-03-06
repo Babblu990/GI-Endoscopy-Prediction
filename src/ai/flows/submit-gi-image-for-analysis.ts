@@ -1,7 +1,8 @@
+
 'use server';
 /**
  * @fileOverview Consolidated Genkit flow for analyzing GI endoscopic images.
- * Updated to integrate with a custom Flask ensemble model backend.
+ * Updated to integrate with a custom Flask ensemble model backend using environment variables.
  */
 
 import { ai } from '@/ai/genkit';
@@ -41,6 +42,12 @@ export async function submitGiImageForAnalysis(
   input: SubmitGiImageForAnalysisInput
 ): Promise<SubmitGiImageForAnalysisOutput> {
   try {
+    const backendUrl = process.env.BACKEND_API_URL;
+    
+    if (!backendUrl) {
+      throw new Error('BACKEND_API_URL is not defined in environment variables.');
+    }
+
     // 1. Prepare the image data for multipart upload
     const [header, base64Data] = input.imageDataUri.split(',');
     const mimeType = header.split(':')[1].split(';')[0];
@@ -52,7 +59,7 @@ export async function submitGiImageForAnalysis(
     formData.append('image', blob, 'scan.jpg');
 
     // 3. Execute inference against custom backend
-    const response = await fetch('https://5stlt67q-5000.inc1.devtunnels.ms/predict', {
+    const response = await fetch(backendUrl, {
       method: 'POST',
       body: formData,
     });
