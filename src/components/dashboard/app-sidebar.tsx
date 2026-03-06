@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -8,8 +9,8 @@ import {
   Settings,
   BrainCircuit,
   Activity,
-  LogOut,
-  Microscope
+  Microscope,
+  Info
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -82,9 +83,9 @@ export function AppSidebar() {
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="text-destructive hover:bg-destructive/10">
-              <LogOut />
-              <span>Sign Out</span>
+            <SidebarMenuButton className="text-muted-foreground hover:bg-white/5">
+              <Info className="w-4 h-4" />
+              <span>System Documentation</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

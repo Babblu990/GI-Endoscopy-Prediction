@@ -1,44 +1,15 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-
     /**
      * FIREBASE SECURITY RULES
-     * Implements a strict User-Ownership model for medical data privacy.
+     * Global access model for public clinical portal MVP.
      */
-
-    function isSignedIn() {
-      return request.auth != null;
+    match /predictions/{predictionId} {
+      allow read, write: if true;
     }
 
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
-    // Rules for user profiles
-    match /users/{userId} {
-      allow read, write: if isOwner(userId);
-      
-      // Rules for diagnostic predictions
-      match /predictions/{predictionId} {
-        allow read, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isOwner(userId) && request.resource.data.userId == userId;
-        allow delete: if isOwner(userId);
-      }
-    }
-
-    // Rules for global AI model metadata
-    match /aiModels/{modelId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if false;
-    }
-
-    // Default Deny
     match /{path=**} {
       allow read, write: if false;
     }

@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Prediction": {
@@ -7,7 +8,6 @@
       "description": "Represents a combined endoscopic image and its AI diagnostic results.",
       "properties": {
         "id": { "type": "string" },
-        "userId": { "type": "string" },
         "uploadedAt": { "type": "string", "format": "date-time" },
         "imageUrl": { "type": "string", "format": "uri" },
         "originalFileName": { "type": "string" },
@@ -15,16 +15,16 @@
         "overallConfidence": { "type": "number" },
         "status": { "type": "string" }
       },
-      "required": ["id", "userId", "uploadedAt", "imageUrl", "overallPrediction", "overallConfidence"]
+      "required": ["id", "uploadedAt", "imageUrl", "overallPrediction", "overallConfidence"]
     }
   },
   "auth": {
-    "providers": ["anonymous", "password"]
+    "providers": []
   },
   "firestore": {
-    "/users/{userId}/predictions/{predictionId}": {
+    "/predictions/{predictionId}": {
       "schema": { "$ref": "#/backend/entities/Prediction" },
-      "description": "Stores diagnostic predictions for a specific user."
+      "description": "Stores diagnostic predictions globally for the clinical portal."
     }
   }
 }

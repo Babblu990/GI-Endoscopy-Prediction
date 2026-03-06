@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -35,21 +36,21 @@ function RelativeTime({ dateString }: { dateString: string }) {
 }
 
 export default function DashboardPage() {
-  const { user, firestore } = useFirebase()
+  const { firestore } = useFirebase()
 
   const recentQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null
+    if (!firestore) return null
     return query(
-      collection(firestore, 'users', user.uid, 'predictions'),
+      collection(firestore, 'predictions'),
       orderBy('uploadedAt', 'desc'),
       limit(5)
     )
-  }, [firestore, user])
+  }, [firestore])
 
   const allReportsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null
-    return collection(firestore, 'users', user.uid, 'predictions')
-  }, [firestore, user])
+    if (!firestore) return null
+    return collection(firestore, 'predictions')
+  }, [firestore])
 
   const { data: recentReports, isLoading: isRecentLoading } = useCollection(recentQuery)
   const { data: allReports, isLoading: isAllLoading } = useCollection(allReportsQuery)
@@ -76,7 +77,7 @@ export default function DashboardPage() {
                   bgColor="bg-primary/10"
                 />
                 <StatCard 
-                  title="Overall Accuracy" 
+                  title="System Health" 
                   value={systemAccuracy} 
                   trend="Stable" 
                   icon={ShieldCheck} 
@@ -84,7 +85,7 @@ export default function DashboardPage() {
                   bgColor="bg-accent/10"
                 />
                 <StatCard 
-                  title="Patient Reports" 
+                  title="Global Reports" 
                   value={isAllLoading ? "..." : scanCount} 
                   trend="+Live" 
                   icon={FileCheck} 
@@ -96,11 +97,11 @@ export default function DashboardPage() {
               <Card className="glass-card">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                   <div>
-                    <CardTitle className="text-xl font-bold">Live Activity Feed</CardTitle>
-                    <CardDescription className="text-xs">Hyper-tuned AI diagnostic stream</CardDescription>
+                    <CardTitle className="text-xl font-bold">Recent System Activity</CardTitle>
+                    <CardDescription className="text-xs">Global AI diagnostic stream</CardDescription>
                   </div>
                   <Button variant="ghost" size="sm" className="text-primary gap-2 h-8 px-2" asChild>
-                    <Link href="/reports">View History <ArrowRight className="w-4 h-4" /></Link>
+                    <Link href="/reports">View All <ArrowRight className="w-4 h-4" /></Link>
                   </Button>
                 </CardHeader>
                 <CardContent>
@@ -108,13 +109,13 @@ export default function DashboardPage() {
                     {isRecentLoading ? (
                       <div className="flex items-center justify-center py-10 text-muted-foreground">
                         <Loader2 className="w-6 h-6 animate-spin mr-2" />
-                        <span className="text-sm">Connecting to backend...</span>
+                        <span className="text-sm">Fetching system data...</span>
                       </div>
                     ) : !recentReports || recentReports.length === 0 ? (
                       <div className="text-center py-12 bg-secondary/10 rounded-2xl border border-dashed border-white/5">
-                        <p className="text-sm text-muted-foreground">No recent scans detected.</p>
+                        <p className="text-sm text-muted-foreground">No scans found in database.</p>
                         <Button variant="link" asChild className="text-primary mt-2">
-                          <Link href="/upload">Perform your first analysis</Link>
+                          <Link href="/upload">Run diagnostic test</Link>
                         </Button>
                       </div>
                     ) : (
@@ -150,14 +151,14 @@ export default function DashboardPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="glass-card border-l-4 border-l-primary">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-[10px] uppercase tracking-widest text-muted-foreground font-black">Inference Latency</CardTitle>
+                    <CardTitle className="text-[10px] uppercase tracking-widest text-muted-foreground font-black">Backend Latency</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-xl font-black text-white mb-2">142ms Response</div>
                     <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
                       <div className="bg-primary h-full w-[12%]" />
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-2 font-medium uppercase">Backend HPO Active • Global CDN</p>
+                    <p className="text-[10px] text-muted-foreground mt-2 font-medium uppercase">HPO Active • Global Distribution</p>
                   </CardContent>
                 </Card>
                 <Card className="glass-card border-l-4 border-l-accent">
@@ -186,7 +187,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="mt-8 w-full p-4 rounded-2xl bg-secondary/30 border border-white/5 text-center max-w-sm mx-auto shadow-xl">
                     <p className="text-[10px] text-muted-foreground mb-1 uppercase tracking-widest font-black">Current Status</p>
-                    <p className="text-sm font-black text-primary uppercase tracking-tighter">System Idle • Waiting for Scan</p>
+                    <p className="text-sm font-black text-primary uppercase tracking-tighter">System Idle • Monitoring Active</p>
                   </div>
                 </CardContent>
               </Card>

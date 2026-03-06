@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -36,15 +37,15 @@ function FormattedDate({ dateString }: { dateString: string }) {
 }
 
 export default function ReportsPage() {
-  const { user, firestore } = useFirebase()
+  const { firestore } = useFirebase()
 
   const predictionsQuery = useMemoFirebase(() => {
-    if (!firestore || !user) return null
+    if (!firestore) return null
     return query(
-      collection(firestore, 'users', user.uid, 'predictions'),
+      collection(firestore, 'predictions'),
       orderBy('uploadedAt', 'desc')
     )
-  }, [firestore, user])
+  }, [firestore])
 
   const { data: reports, isLoading } = useCollection(predictionsQuery)
 
@@ -69,7 +70,7 @@ export default function ReportsPage() {
     const url = URL.createObjectURL(blob)
     const link = document.createElement("a")
     link.setAttribute("href", url)
-    link.setAttribute("download", `GI_Detect_History_${format(new Date(), 'yyyyMMdd')}.csv`)
+    link.setAttribute("download", `GI_Detect_Archive_${format(new Date(), 'yyyyMMdd')}.csv`)
     link.style.visibility = 'hidden'
     document.body.appendChild(link)
     link.click()
@@ -85,8 +86,8 @@ export default function ReportsPage() {
           <div className="max-w-6xl mx-auto space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <h1 className="text-2xl md:text-3xl font-black text-white">Diagnostic History</h1>
-                <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">Comprehensive archive of all patient scans and AI analyses.</p>
+                <h1 className="text-2xl md:text-3xl font-black text-white">Clinical Archive</h1>
+                <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">Public clinical history for research and diagnostic review.</p>
               </div>
               <div className="flex items-center gap-2 w-full md:w-auto">
                 <Button 
@@ -98,7 +99,7 @@ export default function ReportsPage() {
                   <Download className="w-4 h-4" /> Export CSV
                 </Button>
                 <Button className="flex-1 md:flex-none bg-primary text-background font-bold gap-2 cyan-glow h-10" asChild>
-                  <Link href="/upload"><FileText className="w-4 h-4" /> New Report</Link>
+                  <Link href="/upload"><FileText className="w-4 h-4" /> New Analysis</Link>
                 </Button>
               </div>
             </div>
@@ -108,7 +109,7 @@ export default function ReportsPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Search reports..." className="pl-10 bg-secondary/30 border-none h-10 text-sm" suppressHydrationWarning />
+                    <Input placeholder="Search global records..." className="pl-10 bg-secondary/30 border-none h-10 text-sm" suppressHydrationWarning />
                   </div>
                   <Button variant="outline" className="gap-2 border-white/5 bg-secondary/30 h-10 text-xs">
                     <Filter className="w-4 h-4" /> Filters
@@ -119,15 +120,15 @@ export default function ReportsPage() {
                 {isLoading ? (
                   <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
                     <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                    <p className="text-sm font-medium">Loading historical records...</p>
+                    <p className="text-sm font-medium">Loading system archive...</p>
                   </div>
                 ) : !reports || reports.length === 0 ? (
                   <div className="text-center py-20 px-6 border-y border-white/5">
                     <FileText className="w-12 h-12 text-muted-foreground/20 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-white">No reports found</h3>
-                    <p className="text-xs text-muted-foreground mb-6 max-w-xs mx-auto">You haven't performed any AI diagnostic scans yet. Start by uploading an endoscopic image.</p>
+                    <h3 className="text-lg font-bold text-white">Archive is empty</h3>
+                    <p className="text-xs text-muted-foreground mb-6 max-w-xs mx-auto">No diagnostic scans have been recorded in the system yet.</p>
                     <Button asChild variant="outline" className="h-10 px-6">
-                      <Link href="/upload">Upload First Image</Link>
+                      <Link href="/upload">Perform First Scan</Link>
                     </Button>
                   </div>
                 ) : (
