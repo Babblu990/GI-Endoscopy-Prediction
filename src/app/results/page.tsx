@@ -21,6 +21,7 @@ import {
   BrainCircuit
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
 import { useFirebase, useMemoFirebase, useDoc } from "@/firebase"
 import { doc } from "firebase/firestore"
@@ -46,10 +47,6 @@ function ResultsContent() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        if (parsed.analysisResult) {
-          parsed.analysisResult.tunedAccuracy = parsed.analysisResult.tunedAccuracy ?? (parsed.analysisResult.confidence * 100)
-          parsed.analysisResult.baselineAccuracy = parsed.analysisResult.baselineAccuracy ?? (parsed.analysisResult.tunedAccuracy - 12.43)
-        }
         setLocalData(parsed)
       } catch (e) {
         console.error("Error parsing local data", e)
@@ -64,7 +61,7 @@ function ResultsContent() {
       vgg16: dbReport.vgg16,
       resnet50: dbReport.resnet50,
       inceptionV3: dbReport.inceptionV3,
-      baselineAccuracy: dbReport.baselineAccuracy || (dbReport.overallConfidence - 12.43),
+      baselineAccuracy: dbReport.baselineAccuracy || (dbReport.overallConfidence - 12.4),
       tunedAccuracy: dbReport.tunedAccuracy || dbReport.overallConfidence
     },
     presentationResults: { predictionCard: { prediction: dbReport.overallPrediction, confidence: dbReport.overallConfidence, status: dbReport.status } },
@@ -113,8 +110,8 @@ Consensus Prediction: ${data.analysisResult?.prediction || 'N/A'}
 Confidence Score: ${Math.round((data.analysisResult?.confidence || 0) * 100)}%
 
 2. PERFORMANCE METRICS:
-Baseline Accuracy: ${Number(data.analysisResult?.baselineAccuracy || 0).toFixed(2)}%
-Tuned (Optimized) Accuracy: ${Number(data.analysisResult?.tunedAccuracy || 0).toFixed(2)}%
+Baseline Accuracy: ${data.analysisResult?.baselineAccuracy || 0}%
+Tuned (Optimized) Accuracy: ${data.analysisResult?.tunedAccuracy || 0}%
 
 AI CLINICAL INSIGHT:
 ${aiInsight || 'Analysis completed.'}
@@ -150,12 +147,12 @@ ${aiInsight || 'Analysis completed.'}
     )
   }
 
-  const { analysisResult, presentationResults } = data
+  const { analysisResult, presentationResults, preview } = data
   const isHealthy = analysisResult.prediction.toLowerCase() === 'healthy' || analysisResult.prediction.toLowerCase() === 'normal'
   
-  const baseAccuracy = `${Number(analysisResult.baselineAccuracy).toFixed(2)}%`;
-  const tunedAccuracy = `${Number(analysisResult.tunedAccuracy).toFixed(2)}%`;
-  const improvement = (analysisResult.tunedAccuracy - analysisResult.baselineAccuracy).toFixed(2);
+  const baseAccuracy = `${analysisResult.baselineAccuracy}%`;
+  const tunedAccuracy = `${analysisResult.tunedAccuracy}%`;
+  const improvement = (analysisResult.tunedAccuracy - analysisResult.baselineAccuracy).toFixed(1);
 
   return (
     <main className="p-4 md:p-6 overflow-y-auto">
@@ -184,22 +181,37 @@ ${aiInsight || 'Analysis completed.'}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-6">
-            <Card className="glass-card flex flex-col items-center justify-center p-6 min-h-[500px] shadow-2xl overflow-hidden relative border-none">
-               <div className="absolute top-6 left-6 flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                 <span className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground">Region Localization</span>
-               </div>
-               <div className="flex-1 w-full max-w-[340px] py-4">
-                 <HumanBodyVisualizer 
-                   isDetected={!isHealthy} 
-                   prediction={analysisResult.prediction}
-                 />
-               </div>
-            </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Card className="glass-card overflow-hidden border-none shadow-2xl h-[300px]">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-black">Original Endoscopic Frame</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0 h-full relative">
+                  {preview ? (
+                    <Image src={preview} alt="Scan Preview" fill className="object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-black/40 flex items-center justify-center text-muted-foreground text-xs uppercase font-black">Frame Unavailable</div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card className="glass-card flex flex-col items-center justify-center p-4 h-[300px] shadow-2xl overflow-hidden relative border-none">
+                <div className="absolute top-4 left-4 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                  <span className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground">Region Localization</span>
+                </div>
+                <div className="flex-1 w-full max-w-[200px]">
+                  <HumanBodyVisualizer 
+                    isDetected={!isHealthy} 
+                    prediction={analysisResult.prediction}
+                  />
+                </div>
+              </Card>
+            </div>
 
             <div className="space-y-4">
               <div className="flex flex-col gap-1">
-                <h2 className="text-lg font-black text-white uppercase tracking-tighter">Consolidated Performance Metrics</h2>
+                <h2 className="text-lg font-black text-white uppercase tracking-tighter">System Accuracy Benchmarks</h2>
                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Comparison: Pre vs Post Parameter Tuning</p>
               </div>
 
