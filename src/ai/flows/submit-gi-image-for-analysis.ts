@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview Consolidated Genkit flow for analyzing GI endoscopic images.

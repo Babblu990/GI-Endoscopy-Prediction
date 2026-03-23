@@ -140,14 +140,12 @@ export default function UploadPage() {
                         className="object-contain"
                       />
                       <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors" />
-                      <Button 
-                        size="icon" 
-                        variant="destructive" 
-                        className="absolute top-4 right-4 rounded-full w-10 h-10 z-10 shadow-2xl hover:scale-110 transition-transform"
+                      <button 
+                        className="absolute top-4 right-4 rounded-full w-10 h-10 z-10 shadow-2xl hover:scale-110 transition-transform bg-destructive text-white flex items-center justify-center"
                         onClick={() => { setFile(null); setPreview(null); }}
                       >
                         <X className="w-5 h-5" />
-                      </Button>
+                      </button>
                     </div>
                   )}
                 </CardContent>
