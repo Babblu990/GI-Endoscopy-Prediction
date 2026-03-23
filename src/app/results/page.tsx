@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/dashboard/app-sidebar"
 import { Header } from "@/components/dashboard/header"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { HumanBodyVisualizer } from "@/components/dashboard/human-body-visualizer"
 import { Button } from "@/components/ui/button"
 import { 
@@ -14,26 +14,19 @@ import {
   Share2, 
   CheckCircle2, 
   AlertTriangle, 
-  Zap, 
-  Loader2,
-  TrendingUp,
-  Activity,
-  BrainCircuit
+  Loader2
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
 import { useFirebase, useMemoFirebase, useDoc } from "@/firebase"
 import { doc } from "firebase/firestore"
-import { generatePerformanceSummary } from "@/ai/flows/generate-performance-summary"
 
 function ResultsContent() {
   const searchParams = useSearchParams()
   const reportId = searchParams.get('id')
   const { firestore } = useFirebase()
   const [localData, setLocalData] = useState<any>(null)
-  const [aiInsight, setAiInsight] = useState<string | null>(null)
-  const [isInsightLoading, setIsInsightLoading] = useState(false)
 
   const memoizedDocRef = useMemoFirebase(() => {
     if (!firestore || !reportId) return null
@@ -58,40 +51,17 @@ function ResultsContent() {
     analysisResult: { 
       prediction: dbReport.overallPrediction, 
       confidence: dbReport.overallConfidence / 100,
-      vgg16: dbReport.vgg16,
-      resnet50: dbReport.resnet50,
-      inceptionV3: dbReport.inceptionV3,
-      baselineAccuracy: dbReport.baselineAccuracy || (dbReport.overallConfidence - 12.4),
-      tunedAccuracy: dbReport.tunedAccuracy || dbReport.overallConfidence
     },
-    presentationResults: { predictionCard: { prediction: dbReport.overallPrediction, confidence: dbReport.overallConfidence, status: dbReport.status } },
+    presentationResults: { 
+      predictionCard: { 
+        prediction: dbReport.overallPrediction, 
+        confidence: dbReport.overallConfidence, 
+        status: dbReport.status 
+      } 
+    },
     preview: dbReport.imageUrl,
     id: dbReport.id
   } : localData
-
-  useEffect(() => {
-    const baseline = data?.analysisResult?.baselineAccuracy;
-    const tuned = data?.analysisResult?.tunedAccuracy;
-
-    if (typeof baseline === 'number' && typeof tuned === 'number' && !aiInsight && !isInsightLoading) {
-      const fetchInsight = async () => {
-        setIsInsightLoading(true)
-        try {
-          const summary = await generatePerformanceSummary({
-            baseline,
-            tuned
-          })
-          setAiInsight(summary)
-        } catch (error) {
-          console.error("AI Insight Error:", error)
-          setAiInsight("Performance optimization validated. High-precision diagnostics active.")
-        } finally {
-          setIsInsightLoading(false)
-        }
-      }
-      fetchInsight()
-    }
-  }, [data, aiInsight, isInsightLoading])
 
   const sessionId = data?.id || "DX-PENDING"
   const sessionTime = new Date().toLocaleTimeString()
@@ -105,16 +75,9 @@ Report ID: ${sessionId}
 Date: ${new Date().toLocaleDateString()}
 Time: ${sessionTime}
 
-1. DIAGNOSTIC FINDING:
+DIAGNOSTIC FINDING:
 Consensus Prediction: ${data.analysisResult?.prediction || 'N/A'}
 Confidence Score: ${Math.round((data.analysisResult?.confidence || 0) * 100)}%
-
-2. PERFORMANCE METRICS:
-Baseline Accuracy: ${data.analysisResult?.baselineAccuracy || 0}%
-Tuned (Optimized) Accuracy: ${data.analysisResult?.tunedAccuracy || 0}%
-
-AI CLINICAL INSIGHT:
-${aiInsight || 'Analysis completed.'}
 -----------------------------------------
     `
     const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8;' })
@@ -150,10 +113,6 @@ ${aiInsight || 'Analysis completed.'}
   const { analysisResult, presentationResults, preview } = data
   const isHealthy = analysisResult.prediction.toLowerCase() === 'healthy' || analysisResult.prediction.toLowerCase() === 'normal'
   
-  const baseAccuracy = `${analysisResult.baselineAccuracy}%`;
-  const tunedAccuracy = `${analysisResult.tunedAccuracy}%`;
-  const improvement = (analysisResult.tunedAccuracy - analysisResult.baselineAccuracy).toFixed(1);
-
   return (
     <main className="p-4 md:p-6 overflow-y-auto">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -165,7 +124,7 @@ ${aiInsight || 'Analysis completed.'}
             <div>
               <h1 className="text-2xl font-black text-white uppercase tracking-tighter leading-none">Diagnostic Result</h1>
               <p className="text-[10px] text-muted-foreground font-mono mt-1 uppercase tracking-widest">
-                ID: {sessionId} • HPO ACTIVE • {sessionTime}
+                ID: {sessionId} • SYSTEM ACTIVE • {sessionTime}
               </p>
             </div>
           </div>
@@ -182,7 +141,7 @@ ${aiInsight || 'Analysis completed.'}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="glass-card overflow-hidden border-none shadow-2xl h-[300px]">
+              <Card className="glass-card overflow-hidden border-none shadow-2xl h-[400px]">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-black">Original Endoscopic Frame</CardTitle>
                 </CardHeader>
@@ -195,7 +154,7 @@ ${aiInsight || 'Analysis completed.'}
                 </CardContent>
               </Card>
 
-              <Card className="glass-card flex flex-col items-center justify-center p-4 h-[300px] shadow-2xl overflow-hidden relative border-none">
+              <Card className="glass-card flex flex-col items-center justify-center p-4 h-[400px] shadow-2xl overflow-hidden relative border-none">
                 <div className="absolute top-4 left-4 flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
                   <span className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground">Region Localization</span>
@@ -207,64 +166,6 @@ ${aiInsight || 'Analysis completed.'}
                   />
                 </div>
               </Card>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-lg font-black text-white uppercase tracking-tighter">System Accuracy Benchmarks</h2>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Comparison: Pre vs Post Parameter Tuning</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="glass-card bg-[#0f1721] border-none p-6 relative overflow-hidden group shadow-xl">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">Baseline Accuracy</p>
-                  <h3 className="text-4xl font-black text-white tracking-tighter mb-1 opacity-60">{baseAccuracy}</h3>
-                  <p className="text-[10px] text-muted-foreground font-bold uppercase">Pre-Optimization State</p>
-                  <div className="absolute top-0 right-0 p-4 opacity-10">
-                    <Activity className="w-12 h-12" />
-                  </div>
-                </Card>
-
-                <Card className="glass-card bg-[#111c26] border border-primary/20 p-6 relative overflow-hidden group cyan-glow shadow-2xl">
-                  <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-2">Tuned Accuracy</p>
-                  <h3 className="text-4xl font-black text-white tracking-tighter mb-1">{tunedAccuracy}</h3>
-                  <div className="flex items-center gap-2 text-[10px] font-bold text-accent uppercase tracking-widest">
-                    <TrendingUp className="w-3 h-3" /> +{improvement}% Gain Achieved
-                  </div>
-                  <div className="absolute top-0 right-0 p-4">
-                    <Zap className="w-8 h-8 text-primary animate-pulse" />
-                  </div>
-                </Card>
-              </div>
-
-              <Card className="glass-card border-l-4 border-l-primary bg-primary/5 shadow-xl">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                    <BrainCircuit className="w-4 h-4" /> AI Performance Commentary
-                  </CardTitle>
-                </CardHeader>
-              </Card>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <ModelMetricCard 
-                  name="VGG16" 
-                  hpo="+2.1% Tuning" 
-                  prediction={analysisResult.prediction} 
-                  confidence={Math.round((analysisResult.vgg16?.confidence || analysisResult.confidence) * 100)} 
-                />
-                <ModelMetricCard 
-                  name="RESNET50" 
-                  hpo="+3.4% Tuning" 
-                  prediction={analysisResult.prediction} 
-                  confidence={Math.round((analysisResult.resnet50?.confidence || analysisResult.confidence) * 100)} 
-                />
-                <ModelMetricCard 
-                  name="INCEPTIONV3" 
-                  hpo="+1.9% Tuning" 
-                  prediction={analysisResult.prediction} 
-                  confidence={Math.round((analysisResult.inceptionV3?.confidence || analysisResult.confidence) * 100)} 
-                />
-              </div>
             </div>
           </div>
 
@@ -293,28 +194,19 @@ ${aiInsight || 'Analysis completed.'}
                 </div>
               </CardContent>
             </Card>
+
+            <Card className="glass-card border-none bg-secondary/20">
+              <CardContent className="p-6">
+                <h3 className="text-xs font-black uppercase tracking-widest text-white mb-2">Clinical Protocol Note</h3>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  This analysis was performed using the standard ensemble processing pipeline. High-precision region localization is active based on the consensus voting system.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
     </main>
-  )
-}
-
-function ModelMetricCard({ name, hpo, prediction, confidence }: any) {
-  return (
-    <Card className="glass-card bg-[#111c26] border-none p-4 group shadow-lg hover:border-primary/20 transition-all">
-      <div className="flex justify-between items-start mb-4">
-        <h4 className="text-[11px] font-black text-white uppercase tracking-widest">{name}</h4>
-        <span className="text-[8px] font-black text-accent uppercase tracking-widest">{hpo}</span>
-      </div>
-      <div className="space-y-1 mb-4">
-        <p className="text-sm font-black text-white leading-none">{prediction}</p>
-        <p className="text-[10px] text-muted-foreground font-bold">Confidence <span className="text-primary ml-1">{confidence}%</span></p>
-      </div>
-      <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-        <div className="bg-primary h-full transition-all duration-1000" style={{ width: `${confidence}%` }} />
-      </div>
-    </Card>
   )
 }
 
