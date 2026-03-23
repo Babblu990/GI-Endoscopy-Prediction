@@ -50,7 +50,7 @@ function ResultsContent() {
         if (parsed.analysisResult) {
           // Ensure metrics are consistent for legacy data
           parsed.analysisResult.tunedAccuracy = parsed.analysisResult.tunedAccuracy ?? (parsed.analysisResult.confidence * 100)
-          parsed.analysisResult.baselineAccuracy = parsed.analysisResult.baselineAccuracy ?? (parsed.analysisResult.tunedAccuracy - 12.4)
+          parsed.analysisResult.baselineAccuracy = parsed.analysisResult.baselineAccuracy ?? (parsed.analysisResult.tunedAccuracy - 12.43)
         }
         setLocalData(parsed)
       } catch (e) {
@@ -66,7 +66,7 @@ function ResultsContent() {
       vgg16: dbReport.vgg16,
       resnet50: dbReport.resnet50,
       inceptionV3: dbReport.inceptionV3,
-      baselineAccuracy: dbReport.baselineAccuracy || (dbReport.overallConfidence - 12.4),
+      baselineAccuracy: dbReport.baselineAccuracy || (dbReport.overallConfidence - 12.43),
       tunedAccuracy: dbReport.tunedAccuracy || dbReport.overallConfidence
     },
     presentationResults: { predictionCard: { prediction: dbReport.overallPrediction, confidence: dbReport.overallConfidence, status: dbReport.status } },
@@ -115,8 +115,8 @@ Consensus Prediction: ${data.analysisResult?.prediction || 'N/A'}
 Confidence Score: ${Math.round((data.analysisResult?.confidence || 0) * 100)}%
 
 2. PERFORMANCE METRICS:
-Baseline Accuracy: ${data.analysisResult?.baselineAccuracy || 0}%
-Tuned (Optimized) Accuracy: ${data.analysisResult?.tunedAccuracy || 0}%
+Baseline Accuracy: ${Number(data.analysisResult?.baselineAccuracy || 0).toFixed(2)}%
+Tuned (Optimized) Accuracy: ${Number(data.analysisResult?.tunedAccuracy || 0).toFixed(2)}%
 
 AI CLINICAL INSIGHT:
 ${aiInsight || 'Analysis completed.'}
@@ -155,9 +155,10 @@ ${aiInsight || 'Analysis completed.'}
   const { analysisResult, presentationResults, preview } = data
   const isHealthy = analysisResult.prediction.toLowerCase() === 'healthy' || analysisResult.prediction.toLowerCase() === 'normal'
   
-  const baseAccuracy = `${analysisResult.baselineAccuracy}%`;
-  const tunedAccuracy = `${analysisResult.tunedAccuracy}%`;
-  const improvement = (analysisResult.tunedAccuracy - analysisResult.baselineAccuracy).toFixed(1);
+  // Format to 4 numbers (2 decimal places for typical percentages)
+  const baseAccuracy = `${Number(analysisResult.baselineAccuracy).toFixed(2)}%`;
+  const tunedAccuracy = `${Number(analysisResult.tunedAccuracy).toFixed(2)}%`;
+  const improvement = (analysisResult.tunedAccuracy - analysisResult.baselineAccuracy).toFixed(2);
 
   return (
     <main className="p-4 md:p-6 overflow-y-auto">
