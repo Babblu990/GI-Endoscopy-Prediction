@@ -18,19 +18,23 @@ import {
   Zap, 
   Loader2,
   TrendingUp,
-  Activity
+  Activity,
+  BrainCircuit
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
 import { useFirebase, useMemoFirebase, useDoc } from "@/firebase"
 import { doc } from "firebase/firestore"
+import { generatePerformanceSummary } from "@/ai/flows/generate-performance-summary"
 
 function ResultsContent() {
   const searchParams = useSearchParams()
   const reportId = searchParams.get('id')
   const { firestore } = useFirebase()
   const [localData, setLocalData] = useState<any>(null)
+  const [aiInsight, setAiInsight] = useState<string | null>(null)
+  const [isInsightLoading, setIsInsightLoading] = useState(false)
 
   const memoizedDocRef = useMemoFirebase(() => {
     if (!firestore || !reportId) return null
@@ -61,6 +65,26 @@ function ResultsContent() {
     id: dbReport.id
   } : localData
 
+  useEffect(() => {
+    if (data?.analysisResult && !aiInsight && !isInsightLoading) {
+      const fetchInsight = async () => {
+        setIsInsightLoading(true)
+        try {
+          const summary = await generatePerformanceSummary({
+            baseline: data.analysisResult.baselineAccuracy,
+            tuned: data.analysisResult.tunedAccuracy
+          })
+          setAiInsight(summary)
+        } catch (error) {
+          console.error("AI Insight Error:", error)
+        } finally {
+          setIsInsightLoading(false)
+        }
+      }
+      fetchInsight()
+    }
+  }, [data, aiInsight, isInsightLoading])
+
   const sessionId = data?.id || "DX-PENDING"
   const sessionTime = new Date().toLocaleTimeString()
 
@@ -81,6 +105,9 @@ Confidence Score: ${Math.round(data.analysisResult.confidence * 100)}%
 2. PERFORMANCE METRICS:
 Baseline Accuracy (Pre-Tuning): ${data.analysisResult.baselineAccuracy}%
 Optimized Accuracy (Post-Tuning): ${data.analysisResult.tunedAccuracy}%
+
+AI CLINICAL INSIGHT:
+${aiInsight || 'Analysis in progress...'}
 
 -----------------------------------------
 Disclaimer: This is an AI-generated research output. All findings must be confirmed by a board-certified gastroenterologist.
@@ -196,6 +223,27 @@ Disclaimer: This is an AI-generated research output. All findings must be confir
                   </div>
                 </Card>
               </div>
+
+              {/* AI Clinical Insight Section */}
+              <Card className="glass-card border-l-4 border-l-primary bg-primary/5">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-xs font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                    <BrainCircuit className="w-4 h-4" /> AI Clinical Insights
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {isInsightLoading ? (
+                    <div className="flex items-center gap-3 py-2">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-[11px] text-muted-foreground animate-pulse uppercase font-bold">Synthesizing performance analysis...</span>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-white leading-relaxed font-medium italic">
+                      "{aiInsight || 'No performance commentary available for this scan.'}"
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
 
               {/* Individual Model Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
