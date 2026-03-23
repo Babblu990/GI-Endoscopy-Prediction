@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -73,14 +74,23 @@ export default function UploadPage() {
         originalFileName: file?.name || 'scan.jpg',
         overallPrediction: finalPrediction,
         overallConfidence: finalConfidence,
-        status: result.status || 'Completed'
+        status: result.status || 'Completed',
+        vgg16: result.vgg16,
+        resnet50: result.resnet50,
+        inceptionV3: result.inceptionV3
       }
 
       setDocumentNonBlocking(newDocRef, predictionData, { merge: true })
 
       localStorage.setItem('lastResult', JSON.stringify({ 
         id: newDocRef.id,
-        analysisResult: { prediction: finalPrediction, confidence: result.confidence || 0 }, 
+        analysisResult: { 
+          prediction: finalPrediction, 
+          confidence: result.confidence || 0,
+          vgg16: result.vgg16,
+          resnet50: result.resnet50,
+          inceptionV3: result.inceptionV3
+        }, 
         presentationResults: { predictionCard: { prediction: finalPrediction, confidence: finalConfidence, status: result.status || 'Completed' } }, 
         preview 
       }))

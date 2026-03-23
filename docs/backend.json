@@ -13,7 +13,28 @@
         "originalFileName": { "type": "string" },
         "overallPrediction": { "type": "string" },
         "overallConfidence": { "type": "number" },
-        "status": { "type": "string" }
+        "status": { "type": "string" },
+        "vgg16": {
+          "type": "object",
+          "properties": {
+            "prediction": { "type": "string" },
+            "confidence": { "type": "number" }
+          }
+        },
+        "resnet50": {
+          "type": "object",
+          "properties": {
+            "prediction": { "type": "string" },
+            "confidence": { "type": "number" }
+          }
+        },
+        "inceptionV3": {
+          "type": "object",
+          "properties": {
+            "prediction": { "type": "string" },
+            "confidence": { "type": "number" }
+          }
+        }
       },
       "required": ["id", "uploadedAt", "imageUrl", "overallPrediction", "overallConfidence"]
     }
