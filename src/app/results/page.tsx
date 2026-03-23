@@ -21,7 +21,6 @@ import {
   BrainCircuit
 } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
 import { useFirebase, useMemoFirebase, useDoc } from "@/firebase"
 import { doc } from "firebase/firestore"
@@ -48,7 +47,6 @@ function ResultsContent() {
       try {
         const parsed = JSON.parse(saved)
         if (parsed.analysisResult) {
-          // Ensure metrics are consistent for legacy data
           parsed.analysisResult.tunedAccuracy = parsed.analysisResult.tunedAccuracy ?? (parsed.analysisResult.confidence * 100)
           parsed.analysisResult.baselineAccuracy = parsed.analysisResult.baselineAccuracy ?? (parsed.analysisResult.tunedAccuracy - 12.43)
         }
@@ -152,10 +150,9 @@ ${aiInsight || 'Analysis completed.'}
     )
   }
 
-  const { analysisResult, presentationResults, preview } = data
+  const { analysisResult, presentationResults } = data
   const isHealthy = analysisResult.prediction.toLowerCase() === 'healthy' || analysisResult.prediction.toLowerCase() === 'normal'
   
-  // Format to 4 numbers (2 decimal places for typical percentages)
   const baseAccuracy = `${Number(analysisResult.baselineAccuracy).toFixed(2)}%`;
   const tunedAccuracy = `${Number(analysisResult.tunedAccuracy).toFixed(2)}%`;
   const improvement = (analysisResult.tunedAccuracy - analysisResult.baselineAccuracy).toFixed(2);
@@ -293,18 +290,6 @@ ${aiInsight || 'Analysis completed.'}
                     <span className="text-white font-mono">{Math.round(analysisResult.confidence * 100)}%</span>
                   </div>
                   <Progress value={Math.round(analysisResult.confidence * 100)} className={`h-2.5 rounded-full ${isHealthy ? '[&>div]:bg-accent' : '[&>div]:bg-destructive'}`} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-card overflow-hidden border-none shadow-2xl">
-              <CardHeader className="pb-3 pt-5 px-5 bg-secondary/20">
-                <CardTitle className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">Original Endoscopic Frame</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <div className="relative aspect-square w-full">
-                  <Image src={preview} alt="Source Frame" fill className="object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
                 </div>
               </CardContent>
             </Card>
