@@ -243,18 +243,6 @@ ${aiInsight || 'Analysis completed.'}
                     <BrainCircuit className="w-4 h-4" /> AI Performance Commentary
                   </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  {isInsightLoading ? (
-                    <div className="flex items-center gap-3 py-2">
-                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                      <span className="text-[11px] text-muted-foreground animate-pulse uppercase font-bold">Synthesizing clinical analysis...</span>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-white leading-relaxed font-medium italic">
-                      "{aiInsight || 'Performance optimization successfully validated.'}"
-                    </p>
-                  )}
-                </CardContent>
               </Card>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
