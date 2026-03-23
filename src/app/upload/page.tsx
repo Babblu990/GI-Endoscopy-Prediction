@@ -77,7 +77,9 @@ export default function UploadPage() {
         status: result.status || 'Completed',
         vgg16: result.vgg16,
         resnet50: result.resnet50,
-        inceptionV3: result.inceptionV3
+        inceptionV3: result.inceptionV3,
+        baselineAccuracy: result.baselineAccuracy,
+        tunedAccuracy: result.tunedAccuracy
       }
 
       setDocumentNonBlocking(newDocRef, predictionData, { merge: true })
@@ -89,7 +91,9 @@ export default function UploadPage() {
           confidence: result.confidence || 0,
           vgg16: result.vgg16,
           resnet50: result.resnet50,
-          inceptionV3: result.inceptionV3
+          inceptionV3: result.inceptionV3,
+          baselineAccuracy: result.baselineAccuracy,
+          tunedAccuracy: result.tunedAccuracy
         }, 
         presentationResults: { predictionCard: { prediction: finalPrediction, confidence: finalConfidence, status: result.status || 'Completed' } }, 
         preview 
@@ -211,7 +215,7 @@ export default function UploadPage() {
                    <div>
                      <h4 className="font-black text-accent text-xs uppercase tracking-[0.2em] leading-none">Inference Precision</h4>
                      <p className="text-[10px] text-accent/80 mt-2 leading-relaxed font-bold">
-                       Custom Model Accuracy: <strong className="text-white text-sm ml-1">94.2%</strong>
+                       System Accuracy (Tuned): <strong className="text-white text-sm ml-1">94.2%</strong>
                      </p>
                    </div>
                 </div>

@@ -34,7 +34,9 @@
             "prediction": { "type": "string" },
             "confidence": { "type": "number" }
           }
-        }
+        },
+        "baselineAccuracy": { "type": "number" },
+        "tunedAccuracy": { "type": "number" }
       },
       "required": ["id", "uploadedAt", "imageUrl", "overallPrediction", "overallConfidence"]
     }
