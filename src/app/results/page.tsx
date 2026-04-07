@@ -17,7 +17,6 @@ import {
   Loader2
 } from "lucide-react"
 import Link from "next/link"
-import Image from "next/image"
 import { Progress } from "@/components/ui/progress"
 import { useFirebase, useMemoFirebase, useDoc } from "@/firebase"
 import { doc } from "firebase/firestore"
@@ -59,7 +58,6 @@ function ResultsContent() {
         status: dbReport.status 
       } 
     },
-    preview: dbReport.imageUrl,
     id: dbReport.id
   } : localData
 
@@ -110,7 +108,7 @@ Confidence Score: ${Math.round((data.analysisResult?.confidence || 0) * 100)}%
     )
   }
 
-  const { analysisResult, presentationResults, preview } = data
+  const { analysisResult, presentationResults } = data
   const isHealthy = analysisResult.prediction.toLowerCase() === 'healthy' || analysisResult.prediction.toLowerCase() === 'normal'
   
   return (
@@ -140,33 +138,18 @@ Confidence Score: ${Math.round((data.analysisResult?.confidence || 0) * 100)}%
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-7 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="glass-card overflow-hidden border-none shadow-2xl h-[400px]">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground font-black">Original Endoscopic Frame</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 h-full relative">
-                  {preview ? (
-                    <Image src={preview} alt="Scan Preview" fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-black/40 flex items-center justify-center text-muted-foreground text-xs uppercase font-black">Frame Unavailable</div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="glass-card flex flex-col items-center justify-center p-4 h-[400px] shadow-2xl overflow-hidden relative border-none">
-                <div className="absolute top-4 left-4 flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-                  <span className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground">Region Localization</span>
-                </div>
-                <div className="flex-1 w-full max-w-[200px]">
-                  <HumanBodyVisualizer 
-                    isDetected={!isHealthy} 
-                    prediction={analysisResult.prediction}
-                  />
-                </div>
-              </Card>
-            </div>
+            <Card className="glass-card flex flex-col items-center justify-center p-4 min-h-[500px] shadow-2xl overflow-hidden relative border-none">
+              <div className="absolute top-4 left-4 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+                <span className="text-[9px] font-black uppercase tracking-[0.4em] text-muted-foreground">Anatomical Monitoring</span>
+              </div>
+              <div className="flex-1 w-full max-w-[280px]">
+                <HumanBodyVisualizer 
+                  isDetected={!isHealthy} 
+                  prediction={analysisResult.prediction}
+                />
+              </div>
+            </Card>
           </div>
 
           <div className="lg:col-span-5 space-y-6">
